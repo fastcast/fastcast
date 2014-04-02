@@ -27,14 +27,30 @@ a:hover {
 html,
 body {
   height: 100%;
-  background-color: #52527A;
-  background:url('bg.jpg') center no-repeat;
+  margin: 0;
+  background:url('images/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat:no-repeat;
+
 }
 body {
   color: #fff;
   text-align: center;
   text-shadow: 0 1px 3px rgba(0,0,0,.5);
   box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+}
+body {
+    -webkit-animation-delay: 0.1s;
+    -webkit-animation-name: fontfix;
+    -webkit-animation-duration: 0.1s;
+    -webkit-animation-iteration-count: 1;
+    -webkit-animation-timing-function: linear;
+}
+
+@-webkit-keyframes fontfix {
+    from { opacity: 1; }
+    to   { opacity: 1; }
 }
 
 /* Extra markup and styles for table-esque vertical and horizontal centering */
@@ -56,6 +72,10 @@ body {
 /* Padding for spacing */
 .inner {
   padding: 30px;
+}
+
+.video {
+  padding: 10px;
 }
 
 

@@ -43,22 +43,29 @@
           <div class="inner cover">
 
             <h1>
-              <a href="#" class="btn btn-lg btn-default disabled"><i class="fa fa-video-camera fa-2x"></i></a> Fastcast
+              <i class="fa fa-video-camera fa-lg" style="vertical-align: middle;"></i> Fastcast
             </h1>
 
-            <p class="lead">Stream nonprofit video and audio content in a browser window with BitTorrent. Coming soon.</p>
+            <div class="video">
+
+              <iframe src="http://player.vimeo.com/video/32283958" width="100%" height="auto" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+            </div>
+
+            <p class="lead">Stream nonprofit video and audio content with BitTorrent.</p>
 
             <p class="lead">
-              <a href="https://github.com/fastcast/fastcast" class="btn btn-lg btn-default">View on GitHub <i class="fa fa-github fa-lg"></i></a> <br>
+              <a href="https://github.com/fastcast/fastcast" class="btn btn-default">View on GitHub <i class="fa fa-github"></i></a> <br>
             </p>
 
           </div>
 
           <div class="mastfoot">
-
             <div class="inner">
 
-              <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://www.fastcast.co.nz" data-text="Stream nonprofit video and audio content using BitTorrent" data-via="TotalCodex" data-size="large">Tweet</a>
+              <p>
+                <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://www.fastcast.co.nz" data-text="Stream nonprofit video and audio content using BitTorrent" data-via="TotalCodex" data-size="large">Tweet</a>
+              </p>
 
             </div>
           </div>
@@ -75,6 +82,10 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="js/jquery.fitvids.js"></script>
+    <script>
+        $(".video").fitVids();
+    </script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/docs.min.js"></script>
   </body>
