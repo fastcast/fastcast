@@ -1,21 +1,21 @@
 
 <!DOCTYPE html>
 <html lang="en">
-  <body style="background-color:#52527A;">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="About">
+    <meta name="description" content="Contact">
     <meta name="author" content="Jake Fulton Buckle">
 
-    <title>Fastcast</title>
+    <title>About</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="navbar.css" rel="stylesheet">
+    <link href="offcanvas.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Rancho&effect=emboss">
 
     <!-- Font-Awesome -->
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
@@ -23,46 +23,68 @@
   </head>
 
   <body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+           <a class="navbar-brand" href="index.html">Fastcast</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html">Home</a></li>
+             <li class="active"><a href="about.html">About</a></li>
+             <li><a href="contact.html">Contact</a></li>
+          </ul>
+       </div><!-- /.nav-collapse -->
+     </div><!-- /.container -->
+   </div><!-- /.navbar -->
 
     <div class="container">
 
-      <!-- Static navbar -->
-      <div class="navbar navbar-default" role="navigation"><body style="background-color:#52527A;">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="index.html">Fastcast</a>
+      <div class="row row-offcanvas row-offcanvas-right">
+
+        <div class="col-xs-12 col-sm-9">
+          <p class="pull-right visible-xs">
+            <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Toggle nav</button>
+          </p>
+          <div class="jumbotron">
+            <h1><div style="Rancho", cursive; class="font-effect-emboss">About</div></h1>
+            <p> <i class="fa fa-quote-left fa-lg pull-left fa-border"></i> Hi, my project name is Fastcast and the goal is to create a website and app that makes it easy for people to share their creative content so others can stream and download it. This will focus on torrent videos that comply with the rules. Basing the project on P2P file sharing will hopefully speed up video buffering times if enough people are seeding and remove the cost of servers. This project is open to contribution.
+            </p>
           </div>
-          <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              <li><a href="index.html">Home</a></li>
-              <li class="active"><a href="about.html">About</a></li>
-              <li><a href="contact.html">Contact</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div><!--/.container-fluid -->
-      </div>
+        </div><!--/span-->
 
-      <!-- Main component for a primary marketing message or call to action -->
-      <div class="jumbotron">
-        
-        <h1>About</h1>
-        <p> <i class="fa fa-quote-left fa-lg pull-left fa-border"></i> Hi, my project name is Fastcast and the goal is to create a website and app that makes it easy for people to share their creative content so others can stream and download it. This will focus on torrent videos that comply with the rules. Basing the project on P2P file sharing will hopefully speed up video buffering times if enough people are seeding and remove the cost of servers. This project is open to contribution. </p>
-        
-      </div>
+        <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+          <div class="list-group">
+            <a href="about.html" class="list-group-item active">About</a>
+            <a href="#" class="list-group-item">Coming soon</a>
+            <br>
+            <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://www.fastcast.co.nz" data-text="Stream nonprofit video and audio content using BitTorrent" data-via="TotalCodex" data-size="large">Tweet</a>
+          </div>
+        </div><!--/span-->
+      </div><!--/row-->
 
-    </div> <!-- /container -->
+      <hr>
 
+      <footer>
+        <p>2014 Fastcast</p>
+      </footer>
+
+    </div><!--/.container-->
+
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/offcanvas.js"></script>
   </body>
 </html>

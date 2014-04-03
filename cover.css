@@ -78,6 +78,11 @@ body {
   padding: 10px;
 }
 
+h1 { 
+  font-family: 'Days One', sans-serif;
+  font-size: 48px;
+}
+
 
 /*
  * Header

@@ -1,7 +1,6 @@
 
 <!DOCTYPE html>
 <html lang="en">
-  <body style="background-color:#52527A;">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -13,50 +12,49 @@
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="navbar.css" rel="stylesheet">
+    <link href="theme.css" rel="stylesheet">
 
     <!-- Font-Awesome -->
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
   </head>
 
-  <body>
-
-    <div class="container">
-
-      <!-- Static navbar -->
-      <div class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="index.html">Fastcast</a>
-          </div>
+  <body role="document">
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+           <a class="navbar-brand" href="index.html">Fastcast</a>
+        </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
               <li><a href="index.html">Home</a></li>
               <li><a href="about.html">About</a></li>
               <li class="active"><a href="contact.html">Contact</a></li>
-          </div><!--/.nav-collapse -->
-        </div><!--/.container-fluid -->
+          </ul>
+        </div><!--/.nav-collapse -->
       </div>
+    </div>
 
-      <!-- Main component for a primary marketing message or call to action -->
+    <div class="container theme-showcase" role="main">
+
+      <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
-        
         <h1>Get in touch</h1>
         
         <p>Email <a href="mailto:jacobafb@gmail.com">jacobafb@gmail.com</a></p>
 
         <a href="https://twitter.com/TotalCodex" class="twitter-follow-button" data-show-count="false" data-size="large">Follow @TotalCodex</a>
-
-      </div>
 
     </div> <!-- /container -->
 
@@ -67,5 +65,6 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/docs.min.js"></script>
   </body>
 </html>
