@@ -13,9 +13,9 @@ a:hover {
 .btn-default,
 .btn-default:hover,
 .btn-default:focus {
-  color: #52527A;
+  color: #fff; 
   text-shadow: none; /* Prevent inheritence from `body` */
-  background-color: #fff;
+  background-color: #3D3D62;
   border: 1px solid #fff;
 }
 
@@ -28,11 +28,7 @@ html,
 body {
   height: 100%;
   margin: 0;
-  background:url('images/bg.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat:no-repeat;
-
+  background-color: #3D3D62;
 }
 body {
   color: #fff;
@@ -75,12 +71,11 @@ body {
 }
 
 .video {
-  padding: 10px;
 }
 
 h1 { 
-  font-family: 'Days One', sans-serif;
-  font-size: 48px;
+  font-family: 'Londrina Outline', cursive;
+  font-size: 72px;
 }
 
 

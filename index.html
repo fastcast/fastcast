@@ -14,11 +14,30 @@
 
     <!-- Custom styles for this template -->
     <link href="cover.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Days+One&effect=3d">
+
+    <!-- Google Fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Londrina+Outline' rel='stylesheet' type='text/css'>
 
     <!-- Font-Awesome -->
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
+    <!-- Background
+    <style type="text/css">
+
+      html {
+          background: url(images/bg.jpg) no-repeat center center fixed;
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
+      }
+
+      body {
+          overflow-x: hidden;
+          background: transparent;
+          color: #fff;
+      }
+    </style> -->
 
   </head>
 
@@ -43,32 +62,56 @@
 
           <div class="inner cover">
 
-            <h1>
-              </i><div style="Rancho", cursive; class="font-effect-3d vertical-align: middle;">Fastcast</div>
-            </h1>
+            <h1 class="cover-heading">Fastcast</h1>
 
-            <div class="video">
+          </div>
 
-              <iframe src="http://player.vimeo.com/video/32283958" width="100%" height="auto" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+          <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+            <!-- Indicators -->
+            <ol class="carousel-indicators">
+              <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+              <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+              <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+            </ol>
 
+            <!-- Wrapper for slides -->
+            <div class="carousel-inner">
+              <div class="item active">
+                  <div class="video">
+                     <iframe src="http://player.vimeo.com/video/32283958" width="100%" height="auto" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen alt="First slide"></iframe>
+                  </div>
+              </div>
+              <div class="item">
+                  <div class="video">
+                     <iframe src="http://player.vimeo.com/video/88829079?title=0&amp;byline=0&amp;portrait=0" width="100%" height="auto" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen alt="Second slide"></iframe>
+                  </div>
+              </div>
+              <div class="item">
+                  <div class="video">
+                     <iframe src="http://player.vimeo.com/video/18842873?portrait=0" width="100%" height="auto" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen alt="Third slide"></iframe>
+                  </div>
+              </div>
             </div>
+
+            <!-- Controls -->
+           <a class="left carousel-control" href="#carousel-example-generic" data-slide="prev">
+              <span class="glyphicon glyphicon-chevron-left"></span>
+           </a>
+            <a class="right carousel-control" href="#carousel-example-generic" data-slide="next">
+              <span class="glyphicon glyphicon-chevron-right"></span>
+           </a>
+         </div>
+
+          <div class="inner cover">
+
+            <br>
 
             <p class="lead">Stream nonprofit video and audio content with BitTorrent.</p>
 
             <p class="lead">
-              <a href="https://github.com/fastcast/fastcast" class="btn btn-default">View on GitHub <i class="fa fa-github"></i></a>
+              <a href="https://github.com/fastcast/fastcast" class="btn btn-lg btn-default">View on GitHub <i class="fa fa-lg fa-github"></i></a>
             </p>
 
-          </div>
-
-          <div class="mastfoot">
-            <div class="inner">
-
-              <p>
-                <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://www.fastcast.co.nz" data-text="Stream nonprofit video and audio content using BitTorrent" data-via="TotalCodex" data-size="large">Tweet</a>
-              </p>
-
-            </div>
           </div>
 
         </div>
