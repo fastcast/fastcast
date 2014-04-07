@@ -70,14 +70,6 @@ body {
   padding: 30px;
 }
 
-.video {
-}
-
-h1 { 
-  font-family: 'Londrina Outline', cursive;
-  font-size: 72px;
-}
-
 
 /*
  * Header
@@ -134,6 +126,15 @@ h1 {
 .cover .btn-lg {
   padding: 10px 20px;
   font-weight: bold;
+}
+
+h1 { 
+  font-family: 'Londrina Outline', cursive;
+  font-size: 72px;
+}
+
+.carousel {
+  box-shadow: 0px 0px 30px #000;
 }
 
 
