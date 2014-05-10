@@ -28,49 +28,6 @@
       }, false);
     </script>
 
-    <script>
-
-      $(window).load(function() {
-     
-      // Vimeo API nonsense
-      var player = document.getElementById('player_1');
-      $f(player).addEvent('ready', ready);
-     
-      function addEvent(element, eventName, callback) {
-        if (element.addEventListener) {
-          element.addEventListener(eventName, callback, false)
-        } else {
-          element.attachEvent(eventName, callback, false);
-        }
-      }
-     
-      function ready(player_id) {
-        var froogaloop = $f(player_id);
-        froogaloop.addEvent('play', function(data) {
-          $('.flexslider').flexslider("pause");
-        });
-        froogaloop.addEvent('pause', function(data) {
-          $('.flexslider').flexslider("play");
-        });
-      }
-     
-       
-      // Call fitVid before FlexSlider initializes, so the proper initial height can be retrieved.
-      $(".flexslider")
-        .fitVids()
-        .flexslider({
-          animation: "slide",
-          useCSS: false,
-          animationLoop: false,
-          smoothHeight: true,
-          before: function(slider){
-            $f(player).api('pause');
-          }
-      });
-    });
-
-  </script>
-
   </head>
 
   <body>
@@ -141,8 +98,10 @@
 
     </div><!--/.container-->
 
+    <!-- Twitter -->
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 
+    <!-- Google Analystics -->
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -150,6 +109,7 @@
       })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
 
       ga('create', 'UA-49935645-1', 'fastcast.co.nz');
+      ga('require', 'displayfeatures');
       ga('send', 'pageview');
 
     </script>
@@ -160,15 +120,5 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/offcanvas.js"></script>
-
-    <script type="text/javascript">
-      window.___gcfg = {lang: 'en-GB'};
-
-      (function() {
-        var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-        po.src = 'https://apis.google.com/js/platform.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-      })();
-  </script>
   </body>
 </html>
