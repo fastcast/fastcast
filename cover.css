@@ -130,7 +130,12 @@ body {
 
 h1 { 
   font-family: 'Londrina Outline', cursive;
-  font-size: 72px;
+  font-size: 60px;
+}
+
+h4 {
+  color: #000000;
+  text-shadow: none; /* Prevent inheritence from `body` */
 }
 
 

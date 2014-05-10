@@ -28,6 +28,49 @@
       }, false);
     </script>
 
+    <script>
+
+      $(window).load(function() {
+     
+      // Vimeo API nonsense
+      var player = document.getElementById('player_1');
+      $f(player).addEvent('ready', ready);
+     
+      function addEvent(element, eventName, callback) {
+        if (element.addEventListener) {
+          element.addEventListener(eventName, callback, false)
+        } else {
+          element.attachEvent(eventName, callback, false);
+        }
+      }
+     
+      function ready(player_id) {
+        var froogaloop = $f(player_id);
+        froogaloop.addEvent('play', function(data) {
+          $('.flexslider').flexslider("pause");
+        });
+        froogaloop.addEvent('pause', function(data) {
+          $('.flexslider').flexslider("play");
+        });
+      }
+     
+       
+      // Call fitVid before FlexSlider initializes, so the proper initial height can be retrieved.
+      $(".flexslider")
+        .fitVids()
+        .flexslider({
+          animation: "slide",
+          useCSS: false,
+          animationLoop: false,
+          smoothHeight: true,
+          before: function(slider){
+            $f(player).api('pause');
+          }
+      });
+    });
+
+  </script>
+
   </head>
 
   <body>
@@ -65,11 +108,14 @@
 
             <h1><div style="Rancho", cursive; class="font-effect-emboss">About</div></h1>
 
+            <div class="g-follow" data-annotation="bubble" data-height="24" data-href="https://plus.google.com/107211927297048400212" data-rel="publisher"></div>
+
             <p> <i class="fa fa-quote-left fa-lg pull-left fa-border"></i> Imagine if sharing video and audio content on the web had no boundaries and all that people needed were each other. Fastcast aims to make peer-to-peer file sharing easy to use and leave the rest for the community to make great content. The only limit to the amount of possibilities is the creativity of the individuals. With BitTorent, anything that doesn't already exist can be easily created by uploading files to a web server which will take care of the web seeding. If the torrent swarm becomes too popular it would allow the web seed to be disabled. This is becuase people will be sharing the file while the browser page is open. WebRTC allows a streaming torrent client to run in a browser with pure JavaScript, so you won't have to install anything. People using torrent clients that support web seeds will also be able to transmit the file.
             </p>
 
           </div>
           <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://www.fastcast.co.nz" data-text="Stream nonprofit video and audio content using BitTorrent" data-via="TotalCodex" data-size="large">Tweet</a>
+          
         </div><!--/span-->
 
         <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
@@ -114,5 +160,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/offcanvas.js"></script>
+
+    <script type="text/javascript">
+      window.___gcfg = {lang: 'en-GB'};
+
+      (function() {
+        var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+        po.src = 'https://apis.google.com/js/platform.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+      })();
+  </script>
   </body>
 </html>
