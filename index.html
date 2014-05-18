@@ -10,13 +10,13 @@
     <title>Fastcast</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 
     <!-- Custom styles for this template -->
     <link href="cover.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href='http://fonts.googleapis.com/css?family=Londrina+Outline' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Audiowide' rel='stylesheet' type='text/css'>
 
     <!-- Font-Awesome -->
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
@@ -70,87 +70,99 @@
 
           </div>
 
-          <div class="flexslider">
-            <ul class="slides">
-              <li>
-                <img src="slide1.jpg" alt="Awakening">
-                <div class="carousel-caption">
-                   <h3>
-                    <a href="#video-awakening" data-toggle="modal" data-target="#video-awakening">Watch AWAKENING</a>
-                  </h3>
+          <!-- Carousel -->
+          <div id="carousel-videos" class="carousel slide" data-ride="carousel">
+            <!-- Indicators -->
+            <ol class="carousel-indicators">
+              <li data-target="#carousel-videos" data-slide-to="0" class="active"></li>
+              <li data-target="#carousel-videos" data-slide-to="1"></li>
+              <li data-target="#carousel-videos" data-slide-to="2"></li>
+            </ol>
+            <div class="carousel-inner">
+              <div class="item active">
+                <img src="slide1.jpg" alt="First slide">
+                <div class="container">
+                  <div class="carousel-caption">
+                    <h3><a href="#video-awakening" data-toggle="modal" data-target="#video-awakening">Watch AWAKENING <i class="fa fa-play-circle"></i></a></h3>
+                  </div>
                 </div>
-              </li>
-              <li>
-                <img src="slide2.jpg" alt="Bay View">
-                <div class="carousel-caption">
-                   <h3>
-                    <a href="#video-bayview" data-toggle="modal" data-target="#video-bayview">Watch Bayview</a>
-                  </h3>
+              </div>
+              <div class="item">
+                <img src="slide2.jpg" alt="Second slide">
+                <div class="container">
+                  <div class="carousel-caption">
+                    <h3>
+                      <a href="#video-lavabatch" data-toggle="modal" data-target="#video-lavabatch">Watch Lavabatch Raw Run <i class="fa fa-play-circle"></i></a>
+                    </h3>
+                  </div>
                 </div>
-              </li>
-              <li>
-                <img src="slide3.jpg" alt="Slowlifew">
-                <div class="carousel-caption">
-                  <h3>
-                    <a href="#video-slowlife" data-toggle="modal" data-target="#video-slowlife">Watch Slow Life</a>
-                  </h3>
-              </li>
-            </ul>
+              </div>
+              <div class="item">
+                <img src="slide3.jpg" alt="Third slide">
+                <div class="container">
+                  <div class="carousel-caption">
+                    <h3>
+                      <a href="#video-yosemite" data-toggle="modal" data-target="#video-yosemite">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <a class="left carousel-control" href="#myCarousel" data-slide="prev"><span class="glyphicon glyphicon-chevron-left"></span></a>
+            <a class="right carousel-control" href="#myCarousel" data-slide="next"><span class="glyphicon glyphicon-chevron-right"></span></a>
+          </div><!-- /.carousel -->
+
+          <!-- Modal -->
+          <div>
+            <div>
+              <div class="modal fade" id="video-awakening" tabindex="-1" role="dialog" aria-labelledby="video-awakening" aria-hidden="true">
+                 <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">AWAKENING | NEW ZEALAND 4K</h4>
+                      </div>
+                      <div class="modal-body">
+                        <div class=video>
+                         <iframe src="http://player.vimeo.com/video/93003441?color=567fc7" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                        </div>
+                      </div>
+                  </div>
+               </div>
+            </div> 
+            <div>
+               <div class="modal fade" id="video-lavabatch" tabindex="-1" role="dialog" aria-labelledby="video-lavabatch" aria-hidden="true">
+                 <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Watch Lavabatch Raw Run</h4>
+                      </div>
+                      <div class="modal-body">
+                        <div class=video>
+                         <iframe src="http://player.vimeo.com/video/88558298" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                        </div>
+                      </div>
+                  </div>
+               </div>
+            </div> 
+            <div>
+               <div class="modal fade" id="video-yosemite" tabindex="-1" role="dialog" aria-labelledby="video-yosemite" aria-hidden="true">
+                 <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Slow Life</h4>
+                      </div>
+                      <div class="modal-body">
+                        <div class=video>
+                         <iframe src="http://player.vimeo.com/video/87701971" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                        </div>
+                      </div>
+                  </div>
+               </div>
+            </div>
           </div>
-
-          <!-- Modal Awakening -->
-          <div>
-             <div class="modal fade" id="video-awakening" tabindex="-1" role="dialog" aria-labelledby="video-awakening" aria-hidden="true">
-               <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                      <h4 class="modal-title" id="myModalLabel">AWAKENING | NEW ZEALAND 4K</h4>
-                   </div>
-                    <div class="modal-body">
-                      <div class=video>
-                       <iframe src="http://player.vimeo.com/video/93003441?color=567fc7" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                      </div>
-                    </div>
-                </div>
-             </div>
-          </div> 
-
-          <!-- Modal Bayview -->
-          <div>
-             <div class="modal fade" id="video-bayview" tabindex="-1" role="dialog" aria-labelledby="video-bayview" aria-hidden="true">
-               <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                      <h4 class="modal-title" id="myModalLabel">Bayview</h4>
-                   </div>
-                    <div class="modal-body">
-                      <div class=video>
-                       <iframe src="http://player.vimeo.com/video/89579006" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                      </div>
-                    </div>
-                </div>
-             </div>
-          </div> 
-
-          <!-- Modal Slow Life -->
-          <div>
-             <div class="modal fade" id="video-slowlife" tabindex="-1" role="dialog" aria-labelledby="video-slowlife" aria-hidden="true">
-               <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                      <h4 class="modal-title" id="myModalLabel">Slow Life</h4>
-                   </div>
-                    <div class="modal-body">
-                      <div class=video>
-                       <iframe src="http://player.vimeo.com/video/88829079?title=0&amp;byline=0&amp;portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                      </div>
-                    </div>
-                </div>
-             </div>
-          </div> 
 
           <div class="inner cover">
 
@@ -168,22 +180,6 @@
 
     </div>
 
-    <!-- Twitter -->
-    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');
-    </script>
-
-    <!-- Google Analystics -->
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','http://www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-49935645-1', 'fastcast.co.nz');
-      ga('require', 'displayfeatures');
-      ga('send', 'pageview');
-    </script>
-
     <!-- Fitvids -->
     <script src="js/jquery.fitvids.js"></script>
     <script>
@@ -193,7 +189,7 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="js/bootstrap.min.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script src="js/docs.min.js"></script>
   </body>
 </html>
