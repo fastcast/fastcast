@@ -24,6 +24,22 @@
     <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 
+    <!-- fancyBox -->
+    <link rel="stylesheet" href="css/jquery.fancybox.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="js/jquery.fancybox.pack.js"></script>
+    <script type="text/javascript" src="js/jquery.fancybox-media.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+      $('.fancybox-media').fancybox({
+        openEffect  : 'none',
+        closeEffect : 'none',
+        helpers : {
+          media : {}
+        }
+      });
+    });
+    </script>
+
     <!-- Fastclick -->
     <script type='application/javascript' src='js/fastclick.js'></script>
     <script type='application/javascript'>
@@ -75,7 +91,7 @@
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a href="#video-awakening" data-toggle="modal" data-target="#video-awakening">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
+                      <a class="fancybox-media" href="http://vimeo.com/87701971">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
@@ -85,7 +101,7 @@
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a href="#video-lavabatch" data-toggle="modal" data-target="#video-lavabatch">Watch Lavabatch Raw Run <i class="fa fa-play-circle"></i></a>
+                      <a class="fancybox-media" href="http://vimeo.com/88558298">Watch Lavabatch <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
@@ -95,7 +111,7 @@
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a href="#video-yosemite" data-toggle="modal" data-target="#video-yosemite">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
+                      <a class="fancybox-media" href="http://vimeo.com/87701971">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
@@ -106,53 +122,6 @@
             <a class="left carousel-control" href="#carousel-videos" data-slide="prev"><span class="glyphicon glyphicon-chevron-left"></span></a>
             <a class="right carousel-control" href="#carousel-videos" data-slide="next"><span class="glyphicon glyphicon-chevron-right"></span></a>
           </div><!-- /.carousel -->
-
-          <!-- Modals -->
-          <div class="modal fade" id="video-awakening" tabindex="-1" role="dialog" aria-labelledby="video-awakening" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                  <h4 class="modal-title" id="myModalLabel">AWAKENING | NEW ZEALAND 4K</h4>
-                </div>
-                <div class="modal-body">
-                  <div class=video>
-                    <iframe src="http://player.vimeo.com/video/93003441?color=567fc7" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal fade" id="video-lavabatch" tabindex="-1" role="dialog" aria-labelledby="video-lavabatch" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                  <h4 class="modal-title" id="myModalLabel">Lavabatch Raw Run</h4>
-                </div>
-                <div class="modal-body">
-                  <div class=video>
-                    <iframe src="http://player.vimeo.com/video/88558298" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal fade" id="video-yosemite" tabindex="-1" role="dialog" aria-labelledby="video-yosemite" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                  <h4 class="modal-title" id="myModalLabel">Yosemite HD II</h4>
-                </div>
-                <div class="modal-body">
-                  <div class=video>
-                    <iframe src="http://player.vimeo.com/video/87701971" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div class="inner cover">
 
@@ -171,12 +140,6 @@
       </div>
 
     </div>
-
-    <!-- Fitvids -->
-    <script src="js/jquery.fitvids.js"></script>
-    <script>
-        $(".video").fitVids();
-    </script>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
