@@ -140,6 +140,11 @@ h4 {
   text-shadow: none; /* Prevent inheritence from `body` */
 }
 
+a:hover {
+    color: #3366BB;
+    text-decoration: none;
+  }
+
 
 /*
  * Footer
