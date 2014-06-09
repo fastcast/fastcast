@@ -25,27 +25,25 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 
     <!-- fancyBox -->
-    <link rel="stylesheet" href="css/jquery.fancybox.css" type="text/css" media="screen" />
-    <script type="text/javascript" src="js/jquery.fancybox.pack.js"></script>
-    <script type="text/javascript" src="js/jquery.fancybox-media.js"></script>
-    <script type="text/javascript">
-      $(document).ready(function() {
-      $('.fancybox-media').fancybox({
-        openEffect  : 'none',
-        closeEffect : 'none',
-        helpers : {
-          media : {}
-        }
-      });
-    });
-    </script>
+    <link rel="stylesheet" href="/fancybox/source/jquery.fancybox.css?v=2.1.5" type="text/css" media="screen" />
+    <script type="text/javascript" src="/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
 
     <!-- Fastclick -->
     <script type='application/javascript' src='js/fastclick.js'></script>
     <script type='application/javascript'>
-      window.addEventListener('load', function() {
-        new FastClick(document.body);
-      }, false);
+      $(document).ready(function() {
+        $(".various").fancybox({
+          maxWidth  : 800,
+          maxHeight : 600,
+          fitToView : false,
+          width   : '70%',
+          height    : '70%',
+          autoSize  : false,
+          closeClick  : false,
+          openEffect  : 'none',
+          closeEffect : 'none'
+        });
+      });
     </script>
 
   </head>
@@ -91,7 +89,7 @@
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a class="fancybox-media" href="http://vimeo.com/87701971">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
+                      <a class="various fancybox.iframe" href="http://player.vimeo.com/video/87701971">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
@@ -101,7 +99,7 @@
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a class="fancybox-media" href="http://vimeo.com/88558298">Watch Lavabatch <i class="fa fa-play-circle"></i></a>
+                      <a class="various fancybox.iframe" href="http://player.vimeo.com/video/88558298">Watch Lavabatch <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
@@ -111,7 +109,7 @@
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a class="fancybox-media" href="http://vimeo.com/87701971">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
+                      <a class="various fancybox.iframe" href="http://player.vimeo.com/video/87701971">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
