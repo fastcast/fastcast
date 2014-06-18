@@ -130,9 +130,8 @@ body {
   font-weight: bold;
 }
 
-h1 { 
-  font-family: 'Audiowide', cursive;
-  font-size: 48px;
+.carousel {
+  margin-top: 10%;
 }
 
 h4 {
