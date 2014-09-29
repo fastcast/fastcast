@@ -1,15 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-	 width="239.87px" height="239.87px" xml:space="preserve">
-<g>
-	<path fill="#FFFFFF" d="M0,35C0,15.67,15.67,0,35,0h169.87c19.33,0,35,15.67,35,35v169.87c0,19.33-15.67,35-35,35H35
-		c-19.33,0-35-15.67-35-35V35z"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="240px" height="240px" xml:space="preserve">
+<style>
+	.style0{
+		fill:	#FFFFFF;
+	}
+	.style1{
+		fill:	#3E3D62;
+	}
+	.style2{
+		fill:	#9494D3;
+	}
+</style><g>
+	<path d="M0 35C0 15.7 15.7 0 35 0h169.87c19.33 0 35 15.7 35 35v169.87c0 19.33-15.67 35-35 35H35 c-19.33 0-35-15.67-35-35V35z" class="style0"/>
 	<g>
-		<polygon fill="#3E3D62" points="65.444,21.81 196.274,21.81 196.274,65.38 109.015,65.38 109.015,109.01 152.645,109.01 
-			152.645,152.64 109.015,152.64 109.015,196.21 65.444,196.21 65.444,174.43 43.595,174.43 43.595,43.6 65.444,43.6"/>
-		<rect x="65.444" y="196.274" fill="#9494D3" width="43.595" height="21.81"/>
-		<rect x="43.595" y="174.43" fill="#9494D3" width="21.81" height="21.81"/>
+		<polygon points="65.4,21.8 196.3,21.8 196.3,65.4 109,65.4 109,109 152.6,109 152.6,152.6 109,152.6 109,196.2 65.4,196.2 65.4,174.4 43.6,174.4 43.6,43.6 65.4,43.6" class="style1"/>
+		<rect x="65.4" y="196.3" width="43.6" height="21.8" class="style2"/>
+		<rect x="43.6" y="174.4" width="21.8" height="21.8" class="style2"/>
 	</g>
 </g>
 </svg>
