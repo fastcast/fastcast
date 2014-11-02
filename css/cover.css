@@ -115,7 +115,12 @@ body {
   .masthead-nav {
     float: right;
   }
+  .icon {
+  float: left;
+  }
 }
+
+
 
 
 /*
@@ -128,10 +133,6 @@ body {
 .cover .btn-lg {
   padding: 10px 20px;
   font-weight: bold;
-}
-
-.carousel {
-  margin-top: 10%;
 }
 
 h4 {
@@ -178,6 +179,9 @@ a:hover {
   .mastfoot,
   .cover-container {
     width: 100%; /* Must be percentage or pixels for horizontal alignment */
+  }
+  .carousel {
+  margin-top: 15%;
   }
 }
 

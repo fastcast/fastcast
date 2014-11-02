@@ -1,11 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="description" content="Cover">
+    <meta name="description" content="Welcome to Fastcast. P2P video and audio streaming for the web. Available soon.">
     <meta name="author" content="Jake Fulton Buckle">
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="120x120" href="touch-icon-iphone-retina.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="touch-icon-ipad-retina.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="touch-icon-iphone-6-plus.png">
 
     <title>Fastcast</title>
 
@@ -13,10 +18,7 @@
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 
     <!-- Custom styles for this template -->
-    <link href="cover.css" rel="stylesheet">
-
-    <!-- Google Fonts -->
-    <link href='http://fonts.googleapis.com/css?family=Audiowide' rel='stylesheet' type='text/css'>
+    <link href="css/cover.css" rel="stylesheet">
 
     <!-- Font-Awesome -->
     <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
@@ -25,20 +27,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 
     <!-- fancyBox -->
-    <link rel="stylesheet" href="/fancybox/source/jquery.fancybox.css?v=2.1.5" type="text/css" media="screen" />
-    <script type="text/javascript" src="/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+    <link rel="stylesheet" href="fancybox/source/jquery.fancybox.css?v=2.1.5" type="text/css" media="screen" />
+    <script type="text/javascript" src="fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
 
     <!-- Fastclick -->
     <script type='application/javascript' src='js/fastclick.js'></script>
-    <script type='application/javascript'>
-      $(document).ready(function() {
-        $(".various").fancybox({
-          closeClick  : false,
-          openEffect  : 'none',
-          closeEffect : 'none'
-        });
-      });
-    </script>
 
   </head>
 
@@ -52,16 +45,20 @@
 
           <div class="masthead clearfix">
             <div class="inner">
-              <h3 class="masthead-brand"> <img src="logo.svg" height="32"> Fastcast</h3>
+              <a href="/">
+                <svg class="icon" height="64" width="64" viewBox="0 0 114 114" version="1.1">
+                  <rect stroke-dashoffset="0" height="110" width="110" stroke="#FFF" stroke-dasharray="none" stroke-miterlimit="4" y="2" x="2" stroke-width="4" fill="none"/>
+                  <path stroke-linejoin="miter" d="m12,12,0,80,10,0,0,10,10,0,10-10,0-20,20,0,10-10,0-10-30,0,0-20,60,0,0-20z" stroke="#FFF" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="2" fill="none"/>
+                  <path fill="#FFF" d="m12,12,0,70,10,0,0,10,20,0,0-20,20,0,10-10,0-10-30,0,0-20,60,0,0-20z"/>
+                </svg>
+              </a>
               <ul class="nav masthead-nav">
-                <li class="active"><a href="index.html">Home</a></li>
+                <li class="active"><a href="/">Home</a></li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="contact.html">Contact</a></li>
               </ul>
             </div>
           </div>
-
-          <br>
 
           <!-- Carousel -->
           <div id="carousel-videos" class="carousel slide" data-ride="carousel">
@@ -75,31 +72,31 @@
             <!-- Wrapper for slides -->
             <div class="carousel-inner">
               <div class="item active">
-                <img src="slide1.jpg" alt="First slide">
+                <img src="img/slide1.jpg" alt="First slide">
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a class="various fancybox.iframe" href="http://player.vimeo.com/video/93003441">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
+                      <a class="fancybox fancybox.iframe" href="http://player.vimeo.com/video/93003441">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
               </div>
               <div class="item">
-                <img src="slide2.jpg" alt="Second slide">
+                <img src="img/slide2.jpg" alt="Second slide">
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a class="various fancybox.iframe" href="http://player.vimeo.com/video/88558298">Watch Lavabatch <i class="fa fa-play-circle"></i></a>
+                      <a class="fancybox fancybox.iframe" href="http://player.vimeo.com/video/88558298">Watch Lavabatch <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
               </div>
               <div class="item">
-                <img src="slide3.jpg" alt="Third slide">
+                <img src="img/slide3.jpg" alt="Third slide">
                 <div class="container">
                   <div class="carousel-caption">
                     <h3>
-                      <a class="various fancybox.iframe" href="http://player.vimeo.com/video/87701971">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a></a>
+                      <a class="fancybox fancybox.iframe" href="http://player.vimeo.com/video/87701971">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
                     </h3>
                   </div>
                 </div>
@@ -111,14 +108,14 @@
             <a class="right carousel-control" href="#carousel-videos" data-slide="next"><span class="glyphicon glyphicon-chevron-right"></span></a>
           </div><!-- /.carousel -->
 
-          <div class="inner cover">
+          <br>
 
-            <br>
+          <div class="inner cover">
 
             <p class="lead">Stream nonprofit video and audio content with BitTorrent.</p>
 
             <p class="lead">
-              <a href="https://github.com/fastcast/fastcast" class="btn btn-lg btn-default">View on GitHub <i class="fa fa-lg fa-github"></i></a>
+              <a href="about.html" class="btn btn-lg btn-default">Learn more about Fastcast</a>
             </p>
 
           </div>
@@ -128,6 +125,19 @@
       </div>
 
     </div>
+
+    <script type='application/javascript'>
+      $(document).ready(function() {
+        $(".fancybox").fancybox({
+          closeClick  : false,
+          openEffect  : 'none',
+          closeEffect : 'none',
+          iframe: {
+            preload: false
+          },
+        });
+      });
+    </script>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
