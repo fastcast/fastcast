@@ -1,4 +1,4 @@
 fastcast
 ========
 
-Hi, my project name is Fastcast and the goal is to create a website and app that makes it easy for people to share their creative content so others can stream and download it. This will focus on torrent videos that comply with the rules. Basing the project on P2P file sharing will hopefully speed up video buffering times if enough people are seeding and remove the cost of servers. This project is open to contribution.
+Fastcast aims to make peer-to-peer file sharing easy to use and leave the rest to the community. Video and audio content can be uploaded and streamed with a torrent client that runs in a browser. This project is open to contribution.
