@@ -56,31 +56,58 @@
               <li data-target="#carousel-videos" data-slide-to="0" class="active"></li>
               <li data-target="#carousel-videos" data-slide-to="1"></li>
               <li data-target="#carousel-videos" data-slide-to="2"></li>
+              <li data-target="#carousel-videos" data-slide-to="3"></li>
+              <li data-target="#carousel-videos" data-slide-to="4"></li>
+              <li data-target="#carousel-videos" data-slide-to="5"></li>
             </ol>
 
             <!-- Wrapper for slides -->
             <div class="carousel-inner">
               <div class="item active">
-                <img src="img/slide1.jpg" alt="Third slide">
+                <img src="http://i.vimeocdn.com/video/472928026_960.jpg" alt="First slide">
+                <div class="carousel-caption">
+                  <h4>
+                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/93003441?autoplay=1">Watch AWAKENING | NEW ZEALAND 4K <i class="fa fa-play-circle"></i></a>
+                  </h4>
+                </div>
+              </div>
+              <div class="item">
+                <img src="http://i.vimeocdn.com/video/474665344_960.jpg" alt="Second slide">
+                <div class="carousel-caption">
+                  <h4>
+                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/94747106?autoplay=1">Watch AMPLITUDE | NEW ZEALAND 4K <i class="fa fa-play-circle"></i></a>
+                  </h4>
+                </div>
+              </div>
+              <div class="item">
+                <img src="http://i.vimeocdn.com/video/254218511_960.jpg" alt="Third slide">
                 <div class="carousel-caption">
                   <h3>
-                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/93003441?autoplay=1">Watch AWAKENING <i class="fa fa-play-circle"></i></a>
+                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/35396305?autoplay=1">Watch Yosemite HD <i class="fa fa-play-circle"></i></a>
                   </h3>
                 </div>
               </div>
               <div class="item">
-                <img src="img/slide2.jpg" alt="Third slide">
-                <div class="carousel-caption">
-                  <h3>
-                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/88558298?autoplay=1">Watch Lavabatch <i class="fa fa-play-circle"></i></a>
-                  </h3>
-                </div>
-              </div>
-              <div class="item">
-                <img src="img/slide3.jpg" alt="Third slide">
+                <img src="http://i.vimeocdn.com/video/466060650_960.jpg" alt="Fourth slide">
                 <div class="carousel-caption">
                   <h3>
                     <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/87701971?autoplay=1">Watch Yosemite HD II <i class="fa fa-play-circle"></i></a>
+                  </h3>
+                </div>
+              </div>
+              <div class="item">
+                <img src="http://i.vimeocdn.com/video/449052255_960.jpg" alt="Fifth slide">
+                <div class="carousel-caption">
+                  <h3>
+                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/52302939?autoplay=1">Watch Cityscape Chicago <i class="fa fa-play-circle"></i></a>
+                  </h3>
+                </div>
+              </div>
+              <div class="item">
+                <img src="http://i.vimeocdn.com/video/493298356_960.jpg" alt="Sixth slide">
+                <div class="carousel-caption">
+                  <h3>
+                    <a href="#" data-toggle="modal" data-target="#myModal" data-video="http://player.vimeo.com/video/109354891?autoplay=1">Watch Cityscape Chicago II <i class="fa fa-play-circle"></i></a>
                   </h3>
                 </div>
               </div>
@@ -92,24 +119,19 @@
           </div><!-- /.carousel -->
 
           <div class="inner cover">
-            <p class="lead">Stream nonprofit video and audio content with BitTorrent.</p>
+            <p class="lead">Stream peer-to-peer video and audio content with BitTorrent.</p>
             <p class="lead">
               <a href="about.html" class="btn btn-lg btn-default">Learn more</a>
             </p>
           </div>
 
           <!-- Modal -->
-          <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                  <h4 class="modal-title">Video</h4>
-                </div>
-                <div class="modal-body">
-                  <iframe width="500px" height="281px" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                </div>
-              </div>
+          <div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-header">
+              <button type="button" class="close fa fa-times fa-3x" data-dismiss="modal"></a></button>
+            </div>
+            <div class="modal-video">
+              <iframe width="500px" height="281px" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
             </div>
           </div>
 
@@ -144,7 +166,7 @@
           var modal = $(this).data("target"),
           src = $(this).attr("data-video");
           $(modal+' iframe').attr('src', src);
-          $(".modal").fitVids();
+          $(".modal-video").fitVids();
           $(modal+' button.close').click(function(){
             $(modal+' iframe').removeAttr('src');
             $("#carousel-videos").carousel('cycle');
