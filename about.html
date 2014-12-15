@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="description" content="Learn more about Fastcast.">
-    <meta name="author" content="Jake Fulton Buckle">
+    <meta name="author" content="Jacob Fulton Buckle">
     <link rel="icon" href="favicon.ico">
     <link rel="apple-touch-icon" sizes="120x120" href="touch-icon-iphone-retina.png">
     <link rel="apple-touch-icon" sizes="152x152" href="touch-icon-ipad-retina.png">
@@ -14,10 +14,14 @@
     <title>About Fastcast</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="css/offcanvas.css" rel="stylesheet">
+
+    <style> 
+      input.bitpay-donate-error {border:2px solid red;}
+    </style>
 
   </head>
 
@@ -64,30 +68,90 @@
             <p>
               With BitTorrent, anything that doesn't already exist can be easily created by uploading the file to a web server that will take care of creating the torrent. WebRTC allows a streaming torrent client to run in a browser with pure JavaScript, so you won't have to install anything. People using torrent clients that support WebRTC will also be able to connect.
             </p>
-
           </div>
-          
-        </div><!--/span-->
+          <div class="col-xs-12">
+            <h2>Donate with Bitcoin</h2>
+            <form class="form" role="form" action="https://bitpay.com/checkout" method="post" onsubmit="return checkRequiredFields(this);">
+              <input name="action" type="hidden" value="checkout">
+              <div class="form-group">
+                <label for="emailInput">Email</label>
+                <input type="email" class="form-control" id="emailInput" name="orderID" placeholder="Email (optional)" maxlength=50 autocapitalize=off autocorrect=off>
+              </div>
+              <label for="numberInput">Amount</label>
+              <div class="row">
+                <div class="col-xs-8">
+                  <div class="form-group">
+                    <input type="number" class="form-control" id="numberInput" name="price" value="10.00" placeholder="Amount" maxlength="10" min="0.01" step="0.01"/>
+                  </div>
+                </div><!--/.col-xs-8-->
+                <div class="col-xs-4">
+                  <div class="form-group">
+                    <select class="form-control" name="currency" value="">
+                      <option value="USD">USD</option>
+                      <option value="BTC">BTC</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                      <option value="AUD">AUD</option>
+                      <option value="BGN">BGN</option>
+                      <option value="BRL">BRL</option>
+                      <option value="CAD">CAD</option>
+                      <option value="CHF">CHF</option>
+                      <option value="CNY">CNY</option>
+                      <option value="CZK">CZK</option>
+                      <option value="DKK">DKK</option>
+                      <option value="HKD">HKD</option>
+                      <option value="HRK">HRK</option>
+                      <option value="HUF">HUF</option>
+                      <option value="IDR">IDR</option>
+                      <option value="ILS">ILS</option>
+                      <option value="INR">INR</option>
+                      <option value="JPY">JPY</option>
+                      <option value="KRW">KRW</option>
+                      <option value="LTL">LTL</option>
+                      <option value="LVL">LVL</option>
+                      <option value="MXN">MXN</option>
+                      <option value="MYR">MYR</option>
+                      <option value="NOK">NOK</option>
+                      <option value="NZD">NZD</option>
+                      <option value="PHP">PHP</option>
+                      <option value="PLN">PLN</option>
+                      <option value="RON">RON</option>
+                      <option value="RUB">RUB</option>
+                      <option value="SEK">SEK</option>
+                      <option value="SGD">SGD</option>
+                      <option value="THB">THB</option>
+                      <option value="TRY">TRY</option>
+                      <option value="ZAR">ZAR</option>
+                    </select>
+                  </div>
+                </div><!--/.col-xs-4-->
+              </div><!--/row-->
+              <input type="hidden" name="data" value="hsO9lgd5icW126lcv4rymI87fVvOEoTNeNRO0fhESNxV0dvDKubog+3W4OFh1hr+i/iGXak1ES/677CZRIW6JwFiMp3bGg+G7eHrCPtev8L03KmsVbmglUCfC6a3GR1zuDmS7a3oqfOtGk6s/8kB9eimZq1nyVetIqwb62WqpQRRTaf/JZ4ywbXoV/rzcLO5H9RDsomlPkeOISoYRUllJOyG5VCHkNsc7RAE1FY2RTychHD8SxGh56wWz9ORdnNYEXhxkQq36qSWc+SWN6vTfA==">
+              <input name="submit" src="https://bitpay.com/img/donate-button.svg" onerror="this.onerror=null; this.src='https://bitpay.com/img/donate-button-md.png'" width="126" height="48" type="image" alt="BitPay, the easy way to pay with bitcoins." border="0">
+            </form>
+          </div><!--/.col-xs-12-->
+        </div><!--/.col-xs-12.col-sm-9-->
 
         <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
-          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://fastcast.co.nz" data-text="Stream nonprofit video and audio content with BitTorrent" data-via="fastcastnz" data-count="vertical">Tweet</a>
+          <div class="list-inline">
+            <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://fastcast.co.nz" data-text="Stream peer-to-peer video and audio content with BitTorrent" data-via="fastcastnz" data-size="large">Tweet</a>
+          </div>
+          <p><b>Links</b></p>
           <div class="list-group">
-            <p><b>Links</b></p>
             <a href="http://www.bittorrent.com/help/guides/beginners-guide" class="list-group-item">What is BitTorrent?</a>
             <a href="http://wiki.vuze.com/w/Legal_torrent_sites" class="list-group-item">Legal torrent sites</a>
             <a href="https://github.com/mafintosh/peerflix" class="list-group-item">Peerflix</a>
             <a href="http://burnbit.com/" class="list-group-item">Burnbit</a>
             <a href="https://archive.org/index.php" class="list-group-item">Internet Archive</a>
-            <a href="http://thepiratebay.se/" class="list-group-item">The Pirate Bay</a>
           </div>
           <a class="twitter-timeline" href="https://twitter.com/fastcastnz" data-widget-id="468623837718790144">Tweets by @fastcastnz</a>
-        </div><!--/span-->
+        </div><!--/.sidebar-offcanvas-->
       </div><!--/row-->
 
       <hr>
 
       <footer>
-        <p>Donate Bitcoin: <a href="bitcoin:1A7X2Gz7iLrw6W1HWd3j4aMU5DSYCszCnQ">1MCAxUh9jZa7ztMqLpx9mgDadg5DnBg47m</a> or <a href="https://coinbase.com/checkouts/1f9bb1538fe5da93ea8aaba43c14835b">donate via Coinbase</a></p>
+        <p>2014 Fastcast. Created by <a href="https://twitter.com/TotalCodex">Jacob Fulton Buckle</a>.</p>
       </footer>
 
     </div><!--/.container-->
@@ -98,8 +162,8 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="js/offcanvas.js"></script>
     <script src='js/fastclick.js'></script>
     <script>
