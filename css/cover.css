@@ -8,18 +8,8 @@ a:focus {
   color: #fff;
 }
 a:hover {
-  color: #08c;
+  color: #337ab7;
   text-decoration: none;
-}
-
-/* Custom default button */
-.btn-default,
-.btn-default:hover,
-.btn-default:focus {
-  color: #fff; 
-  text-shadow: none; /* Prevent inheritence from `body` */
-  background-color: #3d3d62;
-  border: 1px solid #fff;
 }
 
 
@@ -27,26 +17,42 @@ a:hover {
  * Base structure
  */
 
-html,
-body {
-  height: 100%;
-  margin: 0;
+html {
+  position: relative;
+  min-height: 100%;
 }
 body {
-  color: #fff;
-  text-align: center;
-  text-shadow: 0 1px 3px rgba(0,0,0,.5);
-  background-color: #3d3d62;
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}
+
+/* Custom page CSS
+-------------------------------------------------- */
+/* Not required for template or sticky footer method. */
+
+.container {
+  width: auto;
+  max-width: 680px;
+  padding: 0 15px;
+}
+.container .text-muted {
+  margin: 20px 0;
 }
 
 /* Extra markup and styles for table-esque vertical and horizontal centering */
+.cover {
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
 .site-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 20;
   display: table;
   width: 100%;
-  height: 100%; /* For at least Firefox */
-  min-height: 100%;
-  -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
-          box-shadow: inset 0 0 100px rgba(0,0,0,.5);
 }
 .site-wrapper-inner {
   display: table-cell;
@@ -62,29 +68,11 @@ body {
   padding: 30px;
 }
 
-/* Modal */
-.modal {
-  background-color: #fff;
-  text-shadow: none; /* Prevent inheritence from `body` */
-}
-.modal-backdrop {
-  background-color: #fff;
-}
-.modal-header {
-  border-bottom: none;
-}
-.modal-video {
-  margin-top: 60px;
-}
-:focus {
-  outline: none !important;
-  text-decoration: none !important;
-}
-
 
 /*
  * Header
  */
+
 .masthead-brand {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -125,35 +113,139 @@ body {
   .masthead-nav {
     float: right;
   }
-  .icon {
+  .logo {
     float: left;
+    margin-bottom: 30px;
   }
 }
 
 
-/*
- * Cover
+/* 
+ * Carousel
  */
 
-.cover {
-  padding: 0 20px;
+/* Carousel base class */
+.carousel {
+  min-height: 480px;
+  height: 100vh;
+  max-height: 768px;
 }
-.cover .btn-lg {
-  padding: 10px 20px;
-  font-weight: bold;
-}
-.inner {
-  padding-top: 20px;
+/* Since positioning the image, we need to help out the caption */
+.carousel-caption {
+  padding-bottom: 60px;
+  z-index: 10;
 }
 
+/* Declare heights because of positioning of img element */
+.carousel .item {
+  min-height: 480px;
+  height: 100vh;
+  max-height: 768px;
+  background-color: #3d3d62;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+          box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+}
+.imageone {
+  background-image: url('../img/imageone.jpg');
+}
+.imagetwo {
+  background-image: url('../img/imagetwo.jpg');
+}
+.imagethree {
+  background-image: url('../img/imagethree.jpg');
+}
+.carousel-control.left, .carousel-control.right {
+  background-image: none;
+}
+.down-button {
+	cursor: pointer;
+  position: relative;
+  bottom: 60px;
+  z-index: 10;
+  -webkit-transition: all .2s ease-in-out;
+       -o-transition: all .2s ease-in-out;
+          transition: all .2s ease-in-out;
+}
+.down-button:hover {
+	color: #3d3d62;
+}
+
+/* 	
+ * Featured videos
+ */
+
+.featured-videos {
+	padding-top: 60px;
+	margin-bottom: 20px;
+	text-align: center;
+}
+.featured-videos .col-lg-4 {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.video-boxes {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.description {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	text-align: center;
+	opacity: 0;
+	border-radius: 6px;
+  -webkit-transition: all .2s ease-in-out;
+       -o-transition: all .2s ease-in-out;
+          transition: all .2s ease-in-out;
+}
+.video-boxes:hover .description {
+	color: #fff;
+	opacity: 1;
+	-webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+        box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+}
+
+/*	
+ * Marketing content
+ */
+
+/* Center align the text within the three columns below the carousel */
+.marketing .col-lg-4 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+.marketing h2 {
+  font-weight: normal;
+  color: #5a5a5a;
+}
+.marketing .col-lg-4 p {
+  margin-right: 10px;
+  margin-left: 10px;
+  color: #5a5a5a;
+}
+.featurette-divider {
+  margin: 80px 0; /* Space out the Bootstrap <hr> more */
+}
 
 /*
  * Footer
  */
 
-.mastfoot {
-  color: #999; /* IE8 proofing */
-  color: rgba(255,255,255,.5);
+footer > p > a,
+footer > p > a:focus {
+  color: #337ab7;
+}
+footer > p > a:hover {
+  color: #337ab7;
+  text-decoration: underline;
 }
 
 
@@ -162,33 +254,19 @@ body {
  */
 
 @media (min-width: 768px) {
-  /* Pull out the header and footer */
-  .masthead {
-    position: fixed;
-    top: 0;
-  }
-  .mastfoot {
-    position: fixed;
-    bottom: 0;
-  }
   /* Start the vertical centering */
   .site-wrapper-inner {
     vertical-align: middle;
   }
   /* Handle the widths */
   .masthead,
-  .mastfoot,
   .cover-container {
     width: 100%; /* Must be percentage or pixels for horizontal alignment */
-  }
-  .carousel {
-    margin-top: 120px;
   }
 }
 
 @media (min-width: 992px) {
   .masthead,
-  .mastfoot,
   .cover-container {
     width: 700px;
   }

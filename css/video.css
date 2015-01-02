@@ -90,6 +90,20 @@ body {
 
 
 /*
+ * Videos
+ */
+
+.row {
+  padding-top: 20px;
+}
+.row > div {
+  -webkit-transition: all .3s ease-in-out;
+       -o-transition: all .3s ease-in-out;
+          transition: all .3s ease-in-out;
+}
+
+
+/*
  * Footer
  */
 
@@ -103,8 +117,4 @@ body {
 }
 .container .text-muted {
   margin: 20px 0;
-}
-.footer > .container {
-  padding-right: 15px;
-  padding-left: 15px;
 }
