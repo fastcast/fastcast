@@ -1,4 +1,4 @@
-fastcast
+Fastcast
 ========
 
-Fastcast aims to make peer-to-peer file sharing easy to use and leave the rest to the community. Video and audio content can be uploaded and streamed with a torrent client that runs in a browser. This project is open to contribution.
+**Fastcast** is a website for streaming audio and video content. The content is shared across a peer-to-peer network. Fastcast is powered by [WebTorrent](http://webtorrent.io): a streaming torrent client for node.js and the browser. This allows torrent files to be streamed in the browser. This project is open to contribution.
