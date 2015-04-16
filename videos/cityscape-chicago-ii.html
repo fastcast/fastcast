@@ -17,7 +17,7 @@
     <link href="../css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="../css/video.css" rel="stylesheet">
+    <link href="../css/base.css" rel="stylesheet">
 
     <!-- Font-Awesome -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
@@ -36,7 +36,7 @@
           <div class="masthead clearfix">
             <div class="inner">
               <a href="/">
-                <svg class="logo" height="64" width="64" viewBox="0 0 114 114" version="1.1">
+                <svg class="masthead-brand" height="64" width="64" viewBox="0 0 114 114" version="1.1">
                   <rect stroke-dashoffset="0" height="110" width="110" stroke="#3d3d62" stroke-dasharray="none" stroke-miterlimit="4" y="2" x="2" stroke-width="4" fill="none"/>
                   <path stroke-linejoin="miter" d="m12,12,0,80,10,0,0,10,10,0,10-10,0-20,20,0,10-10,0-10-30,0,0-20,60,0,0-20z" stroke="#3d3d62" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="2" fill="none"/>
                   <path fill="#3d3d62" d="m12,12,0,70,10,0,0,10,20,0,0-20,20,0,10-10,0-10-30,0,0-20,60,0,0-20z"/>
@@ -55,7 +55,7 @@
     </div>
 
     <div class="container">
-      <div class="row">
+      <div class="row videos">
         <div id="video" class="col-xs-12 col-md-9">
           <div id="player"></div>
           <a href="#">Peers <span class="badge">1</span></a>
@@ -129,43 +129,25 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
     <script>
-      var url = 'magnet:?xt=urn:btih:fd36e50f297881a958b2581440e5c8fa3702b2d6&tr=wss://tracker.webtorrent.io';
-      var client = new WebTorrent()
-
-      client.download(url, function (torrent) {
-        // Got torrent metadata!
-        console.log('Torrent info hash:', torrent.infoHash)
-
-        // Let's say the first file is a webm (vp8) or mp4 (h264) video...
-        var file = torrent.files[0]
-
-        // Create a video element
-        var videoTo = document.getElementById('player')
-        var video = document.createElement('video')
-        video.controls = true
-        videoTo.appendChild(video)
-        video.setAttribute("style","width:100%")
-
-        // Stream the video into the video tag
-        file.createReadStream().pipe(video)
-      })
+      var url = 'magnet:?xt=urn:btih:fd36e50f297881a958b2581440e5c8fa3702b2d6&tr=wss://tracker.webtorrent.io'
     </script>
+    <script src="../js/app.js"></script>
     <script>
       $(document).ready(function () {
         $('[data-toggle=videoSize]').click(function () {
           $('#video').toggleClass('col-md-9')
-        });
-      });
+        })
+      })
     </script>
     <script src='../js/fastclick.js'></script>
     <script>
       $(function() {
-        FastClick.attach(document.body);
-      });
+        FastClick.attach(document.body)
+      })
     </script>
   </body>
 </html>

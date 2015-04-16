@@ -17,7 +17,8 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="css/about.css" rel="stylesheet">
+    <link href="css/base.css" rel="stylesheet">
+    <link href="css/offcanvas.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -33,7 +34,7 @@
           <div class="masthead clearfix">
             <div class="inner">
               <a href="/">
-                <svg class="logo" height="64" width="64" viewBox="0 0 114 114" version="1.1">
+                <svg class="masthead-brand" height="64" width="64" viewBox="0 0 114 114" version="1.1">
                   <rect stroke-dashoffset="0" height="110" width="110" stroke="#3d3d62" stroke-dasharray="none" stroke-miterlimit="4" y="2" x="2" stroke-width="4" fill="none"/>
                   <path stroke-linejoin="miter" d="m12,12,0,80,10,0,0,10,10,0,10-10,0-20,20,0,10-10,0-10-30,0,0-20,60,0,0-20z" stroke="#3d3d62" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="2" fill="none"/>
                   <path fill="#3d3d62" d="m12,12,0,70,10,0,0,10,20,0,0-20,20,0,10-10,0-10-30,0,0-20,60,0,0-20z"/>
@@ -63,6 +64,7 @@
             <h1>About</h1>
             <p>Imagine if sharing video and audio content on the web had no boundaries and all we needed were each other. Fastcast aims to make peer-to-peer file sharing easy to use and leave the rest to the community. There are no limits, other than the creativity of the individuals.</p>
             <p>Fastcast is powered by WebTorrent; a streaming torrent client for the browser. WebTorrent is written entirely in JavaScript, the language of the web, so you don't need to install any plugins. BitTorrent clients that support WebRTC, will be able to connect to the peer-to-peer network. This means you will be able to download files from a desktop client as well.</p>
+            <p>Donate bitcoin <a href="bitcoin:1A7X2Gz7iLrw6W1HWd3j4aMU5DSYCszCnQ">1MCAxUh9jZa7ztMqLpx9mgDadg5DnBg47m</a>. (<a href="https://keybase.io/codex">proof</a>)</p>
           </div>
         </div><!--/.col-xs-12.col-sm-9-->
 
@@ -72,23 +74,22 @@
           </div>
           <p><b>Links</b></p>
           <div class="list-group">
-            <a href="http://www.bittorrent.com/help/guides/beginners-guide" class="list-group-item">What is BitTorrent?</a>
+            <a href="http://help.bittorrent.com/customer/portal/articles/164636-what-is-the-bittorrent-protocol-" class="list-group-item">What is the BitTorrent Protocol?</a>
             <a href="http://wiki.vuze.com/w/Legal_torrent_sites" class="list-group-item">Legal torrent sites</a>
-            <a href="https://github.com/mafintosh/peerflix" class="list-group-item">Peerflix</a>
-            <a href="http://burnbit.com/" class="list-group-item">Burnbit</a>
-            <a href="https://archive.org/index.php" class="list-group-item">Internet Archive</a>
+            <a href="http://webtorrent.io" class="list-group-item">WebTorrent</a>
+            <a href="https://www.archive.org" class="list-group-item">Internet Archive</a>
           </div>
           <a class="twitter-timeline" href="https://twitter.com/fastcastnz" data-widget-id="468623837718790144">Tweets by @fastcastnz</a>
         </div><!--/.sidebar-offcanvas-->
       </div><!--/row-->
 
-      <hr>
-
-      <footer>
-        <p>2014 Fastcast. Created by <a href="https://twitter.com/TotalCodex">Jacob Fulton Buckle</a>. Donate bitcoin <a href="bitcoin:1A7X2Gz7iLrw6W1HWd3j4aMU5DSYCszCnQ">1MCAxUh9jZa7ztMqLpx9mgDadg5DnBg47m</a>. (<a href="https://keybase.io/codex">proof</a>)</p>
-      </footer>
-
     </div><!--/.container-->
+
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted">2014 Fastcast.</p>
+      </div>
+    </footer>
 
     <!-- Twitter -->
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
@@ -96,14 +97,14 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/offcanvas.js"></script>
     <script src='js/fastclick.js'></script>
     <script>
       $(function() {
-        FastClick.attach(document.body);
-      });
+        FastClick.attach(document.body)
+      })
     </script>
   </body>
 </html>

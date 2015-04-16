@@ -2,25 +2,20 @@
  * Globals
  */
 
-/* Links */
-a:focus,
-a:hover {
-  text-decoration: none;
-}
+ /* Links */
+ a,
+ a:focus {
+   color: #6a9fb5;
+ }
+ a:hover {
+   color: #3d3d62;
+   text-decoration: none;
+ }
 
 
 /*
  * Base structure
  */
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
-}
 
 /* Extra markup and styles for table-esque vertical and horizontal centering */
 .site-wrapper {
@@ -57,34 +52,29 @@ body {
   padding-right: 0;
   padding-left: 0;
   font-size: 16px;
-  color: #404040; /* IE8 proofing */
-  color: rgba(000,000,000,.75);
+  color: #6a9fb5;
   border-bottom: 2px solid transparent;
 }
 .masthead-nav > li > a:hover,
 .masthead-nav > li > a:focus {
   background-color: transparent;
-  border-bottom-color: #bfbfbf;
-  border-bottom-color: rgba(000,000,000,.25);
+  border-bottom-color: #6a9fb5;
 }
 .masthead-nav > .active > a,
 .masthead-nav > .active > a:hover,
 .masthead-nav > .active > a:focus {
   color: #3d3d62;
-  border-bottom-color: #bfbfbf;
+  border-bottom-color: #3d3d62;
   border-bottom-width: 2px;
 }
 
 @media (min-width: 768px) {
   .masthead-brand {
     float: left;
+    margin-bottom: 30px;
   }
   .masthead-nav {
     float: right;
-  }
-  .logo {
-    float: left;
-    margin-bottom: 30px;
   }
 }
 
@@ -93,10 +83,7 @@ body {
  * Videos
  */
 
-.row {
-  padding-top: 20px;
-}
-.row > div {
+.videos > div {
   -webkit-transition: all .3s ease-in-out;
        -o-transition: all .3s ease-in-out;
           transition: all .3s ease-in-out;
@@ -107,6 +94,14 @@ body {
  * Footer
  */
 
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}
 .footer {
   position: absolute;
   bottom: 0;
