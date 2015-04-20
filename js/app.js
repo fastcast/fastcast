@@ -1,4 +1,6 @@
-var url = 'magnet:?xt=urn:btih:6956280f07264333d4753f50a478de96bf9d28b6&tr=wss://tracker.webtorrent.io'
+var videostream = require('videostream');
+var WebTorrent = require('webtorrent')
+
 var client = new WebTorrent()
 
 client.download(url, function (torrent) {
@@ -16,5 +18,5 @@ client.download(url, function (torrent) {
   video.setAttribute("style","width:100%")
 
   // Stream the video into the video tag
-  file.createReadStream().pipe(video)
+  videostream(file, video)
 })
