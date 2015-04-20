@@ -9,4 +9,4 @@ Fastcast
 
 ### Support Fastcast
 
-- ** [Become a seeder!](http://fastcast.nz/seed.html)
+- **[Become a seeder!](http://fastcast.nz/seed.html)** - Help share the vidoes on Fastcast
