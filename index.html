@@ -174,15 +174,35 @@
         </div><!-- /.col-lg-4 -->
       </div><!-- /.row -->
 
-      <hr class="featurette-divider">
-
-      <!-- Footer -->
-      <footer>
-        <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>2014 Fastcast. Created by <a href="https://twitter.com/TotalCodex">Jacob Fulton Buckle</a>. Powered by <a href="http://webtorrent.io">WebTorrent</a>.</p>
-      </footer>
-
     </div>
+
+    <!-- Social -->
+    <div class="social-buttons">
+      <div class="container">
+        <ul class="list-inline">
+          <li>
+            <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=jakefb&repo=fastcast&type=watch&count=true" width="100px" height="20px" title="Star on GitHub"></iframe>
+          </li>
+          <li>
+            <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=jakefb&repo=fastcast&type=fork&count=true" width="102px" height="20px" title="Fork on GitHub"></iframe>
+          </li>
+          <li class="follow-btn">
+            <a href="https://twitter.com/fastcastnz" class="twitter-follow-button" data-link-color="#0069D6" data-show-count="true">Follow @fastcastnz</a>
+          </li>
+          <li class="tweet-btn hidden-phone">
+            <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://fastcast.nz" data-text="Stream peer-to-peer video and audio content with BitTorrent" data-count="horizontal" data-via="fastcastnz" data-related="TotalCodex:Creator of Fastcast">Tweet</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted">2014 Fastcast. Powered by <a href="http://webtorrent.io">WebTorrent</a>.</p>
+      </div>
+    </footer>
+
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -199,14 +219,17 @@
           $(this).parent().carousel('next')
         })
       })
-    </script>
-    <script>
       $("#scrollBelow").click(function() {
           $('html, body').animate({
               scrollTop: $("#featuredVideos").offset().top
           }, 1000)
       });
     </script>
+
+    <!-- Twitter -->
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+    <!-- Fastclick -->
     <script src='js/fastclick.js'></script>
     <script>
       $(function() {
