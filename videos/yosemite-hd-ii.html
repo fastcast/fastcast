@@ -59,12 +59,10 @@
       <div class="row videos">
         <div id="video" class="col-xs-12 col-md-9">
           <div id="player"></div>
-          <a href="#">Peers <span class="badge">1</span></a>
-          <a class="btn btn-primary btn-xs" href="#" role="button"><i class="fa fa-magnet"></i> Magnetic link</a>
-          <a class="btn btn-primary btn-xs" href="#" role="button"><i class="fa fa-download"></i> Download</a>
           <p class="pull-right visible-md visible-lg">
             <button type="button" class="btn btn-primary btn-xs" data-toggle="videoSize">Toggle video size</button>
           </p>
+          <div class="log"></div>
           <div class="caption">
             <h3>Yosemite HD II <small>Project Yosemite</small></h3>
             <p class="lead">A 200+ mile backpacking experience through Yosemite National Park captured by Colin Delehanty and Sheldon Neill. This project was filmed over the course of 10 months. We spent a combined 45 days in the park capturing the images in this video.</p>
@@ -166,7 +164,7 @@
 
     <!-- WebTorrent -->
     <script>
-      var url = 'magnet:?xt=urn:btih:75cf1afe22c63b58edb76af0ac3e21ec0c5315b3&tr=wss://tracker.webtorrent.io'
+      var magnetUri = 'magnet:?xt=urn:btih:75cf1afe22c63b58edb76af0ac3e21ec0c5315b3&tr=wss://tracker.webtorrent.io'
     </script>
     <script src="../js/bundle.js"></script>
 
