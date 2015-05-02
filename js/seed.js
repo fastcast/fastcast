@@ -30,7 +30,7 @@ function onTorrent (torrent) {
   logAppend('Progress: starting...')
 
   torrent.swarm.on('upload', function () {
-    logReplace('Upload speed:' + prettysize(client.uploadSpeed()) + '/s')
+    logReplace('Upload speed: ' + prettysize(client.uploadSpeed()) + '/s')
   })
 }
 
