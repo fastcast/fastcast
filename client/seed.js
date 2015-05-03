@@ -26,7 +26,7 @@ dragDrop('body', function (files) {
 
 function onTorrent (torrent) {
   logAppend('Thanks for seeding!')
-  logAppend('Torrent info hash: ' + torrent.infoHash + ' <a href="https://instant.io/#'+torrent.infoHash+'" target="_blank">(link)</a>')
+  logAppend('Torrent info hash: ' + torrent.infoHash + ' <a href="https://instant.io/#' + torrent.infoHash + '" target="_blank">(link)</a>')
   logAppend('Progress: starting...')
 
   torrent.swarm.on('upload', function () {
@@ -37,13 +37,13 @@ function onTorrent (torrent) {
 var log = document.querySelector('.log')
 
 // append a P to the log
-function logAppend(str){
+function logAppend (str) {
   var p = document.createElement('p')
   p.innerHTML = str
   log.appendChild(p)
 }
 
 // replace the last P in the log
-function logReplace(str){
+function logReplace (str) {
   log.lastChild.innerHTML = str
 }

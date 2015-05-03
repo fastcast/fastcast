@@ -30,7 +30,7 @@ function onTorrent (torrent) {
   var video = document.createElement('video')
   video.controls = true
   videoTo.appendChild(video)
-  video.setAttribute("style","width:100%")
+  video.setAttribute('style', 'width:100%')
 
   // Stream the video into the video tag
   videostream(file, video)
@@ -39,13 +39,13 @@ function onTorrent (torrent) {
 var log = document.querySelector('.log')
 
 // append a P to the log
-function logAppend(str){
+function logAppend (str) {
   var p = document.createElement('p')
   p.innerHTML = str
   log.appendChild(p)
 }
 
 // replace the last P in the log
-function logReplace(str){
+function logReplace (str) {
   log.lastChild.innerHTML = str
 }

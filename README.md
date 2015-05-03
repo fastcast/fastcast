@@ -26,3 +26,7 @@ Then go to the video page, in our case it's [fastcast.nz/videos/agitation-new-ze
 ![screenshot-3](http://i.imgur.com/qyornm2.jpg)
 
 As a result, we see the video streaming at the page and we can invite our friends to see.
+
+### License
+
+MIT. Copyright (c) [Jacob Fulton Buckle](https://github.com/jakefb).

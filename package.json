@@ -1,0 +1,42 @@
+{
+  "name": "fastcast",
+  "version": "1.0.0",
+  "description": "Stream peer-to-peer audio and video content",
+  "main": "index.html",
+  "scripts": {
+    "test": "standard",
+    "build": "browserify client -o js/bundle.js && browserify client/seed.js -o js/bundle-seed.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jakefb/fastcast.git"
+  },
+  "keywords": [
+    "stream",
+    "p2p",
+    "video",
+    "torrent"
+  ],
+  "author": {
+    "name": "Jacob Fulton Buckle",
+    "email": "jacobafb@gmail.com",
+    "url": "https://github.com/jakefb"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jakefb/fastcast/issues"
+  },
+  "homepage": "http://fastcast.nz",
+  "dependencies": {
+    "drag-drop": "^2.1.0",
+    "prettysize": "0.0.3",
+    "typedarray-to-buffer": "^3.0.1",
+    "upload-element": "^1.0.1",
+    "videostream": "0.0.2",
+    "webtorrent": "^0.33.0"
+  },
+  "devDependencies": {
+    "browserify": "^10.0.0",
+    "standard": "^3.7.2"
+  }
+}
