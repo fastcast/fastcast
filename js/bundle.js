@@ -7630,8 +7630,8 @@ Swarm.prototype._drain = function () {
   var parts = addrToIPPort(peer.addr)
   var conn = peer.conn = net.connect(parts[1], parts[0])
 
-  conn.on('connect', function () { peer.onConnect() })
-  conn.on('error', function () { conn.destroy() })
+  conn.once('connect', function () { peer.onConnect() })
+  conn.once('error', function () { peer.destroy() })
   peer.setTimeout()
 
   // When connection closes, attempt reconnect after timeout (with exponential backoff)
@@ -7687,7 +7687,13 @@ exports.createWebRTCPeer = function (conn, swarm) {
   peer.conn = conn
   peer.swarm = swarm
 
-  peer.onConnect()
+  if (peer.conn.connected) {
+    peer.onConnect()
+  } else {
+    peer.conn.once('connect', function () { peer.onConnect() })
+    peer.conn.once('error', function () { peer.destroy() })
+    peer.setTimeout()
+  }
 
   return peer
 }
@@ -7763,7 +7769,8 @@ Peer.prototype.onConnect = function () {
   wire.once('finish', destroy)
   wire.once('error', destroy)
 
-  if (self.addr) self.wire.remoteAddress = self.addr // TODO: remove this property
+  // TODO: remove this property
+  self.wire.remoteAddress = self.addr || (conn.remoteAddress + ':' + conn.remotePort)
 
   wire.once('handshake', function (infoHash) { self.onHandshake(infoHash) })
   self.setTimeout()
@@ -10696,7 +10703,7 @@ module.exports = function parseTorrent (torrentId) {
     return magnet('magnet:?xt=urn:btih:' + torrentId)
   } else if (Buffer.isBuffer(torrentId) && len === 20) {
     // info hash (buffer)
-    return { infoHash: torrentId.toString('hex') }
+    return magnet('magnet:?xt=urn:btih:' + torrentId.toString('hex'))
   } else if (Buffer.isBuffer(torrentId)) {
     // .torrent file (buffer)
     return parseTorrentFile(torrentId) // might throw
@@ -11776,7 +11783,8 @@ function Discovery (opts) {
     rtcConfig: null, // browser only
     peerId: null,
     port: 0, // torrent port
-    tracker: true
+    tracker: true,
+    wrtc: null
   }, opts)
 
   self._externalDHT = typeof self.dht === 'object'
@@ -11784,10 +11792,6 @@ function Discovery (opts) {
 
   if (!self.peerId) throw new Error('peerId required')
   if (!process.browser && !self.port) throw new Error('port required')
-  if (process.browser && (!self.announce || self.announce.length === 0)) {
-    // If no trackers specified in browser, use default so WebTorrent Just Works(TM).
-    self.announce = [ 'wss://tracker.webtorrent.io' ]
-  }
 
   if (self.dht) self._createDHT(self.dhtPort)
 }
@@ -11846,7 +11850,8 @@ Discovery.prototype._createTracker = function () {
   }
 
   var trackerOpts = {
-    rtcConfig: self.rtcConfig
+    rtcConfig: self.rtcConfig,
+    wrtc: self.wrtc
   }
 
   self.tracker = new Tracker(self.peerId, self.port, torrent, trackerOpts)
@@ -11986,7 +11991,6 @@ Client.scrape = function (announceUrl, infoHash, cb) {
     ? infoHash.map(function (infoHash) { return new Buffer(infoHash, 'hex') })
     : new Buffer(infoHash, 'hex')
   client.scrape({ infoHash: infoHash })
-
 }
 
 /**
@@ -12128,8 +12132,6 @@ Client.prototype._defaultAnnounceOpts = function (opts) {
 
 var querystring = require('querystring')
 
-var MAX_UINT = Math.pow(2, 32) - 1
-
 exports.IPV4_RE = /^[\d\.]+$/
 exports.IPV6_RE = /^[\da-fA-F:]+$/
 
@@ -12150,7 +12152,6 @@ exports.EVENT_NAMES = {
 }
 
 function toUInt32 (n) {
-  if (n > MAX_UINT) n = MAX_UINT
   var buf = new Buffer(4)
   buf.writeUInt32BE(n, 0)
   return buf
@@ -12437,20 +12438,6 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-function getBrowserRTC () {
-  if (typeof window === 'undefined') return null
-  var wrtc = {
-    RTCPeerConnection: window.mozRTCPeerConnection || window.RTCPeerConnection ||
-      window.webkitRTCPeerConnection,
-    RTCSessionDescription: window.mozRTCSessionDescription ||
-      window.RTCSessionDescription || window.webkitRTCSessionDescription,
-    RTCIceCandidate: window.mozRTCIceCandidate || window.RTCIceCandidate ||
-      window.webkitRTCIceCandidate
-  }
-  if (!wrtc.RTCPeerConnection) return null
-  return wrtc
-}
-
 inherits(Peer, stream.Duplex)
 
 /**
@@ -12489,6 +12476,12 @@ function Peer (opts) {
 
   self.destroyed = false
   self.connected = false
+
+  self.remoteAddress = undefined
+  self.remoteFamily = undefined
+  self.remotePort = undefined
+  self.localAddress = undefined
+  self.localPort = undefined
 
   self._pcReady = false
   self._channelReady = false
@@ -12547,6 +12540,8 @@ function Peer (opts) {
   if (self._interval.unref) self._interval.unref()
 }
 
+Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
+
 /**
  * Expose config and constraints for overriding all Peer instances. Otherwise, just
  * set opts.config and opts.constraints when constructing a Peer.
@@ -12560,6 +12555,18 @@ Peer.config = {
   ]
 }
 Peer.constraints = {}
+
+Object.defineProperty(Peer.prototype, 'bufferSize', {
+  get: function () {
+    var self = this
+    return (self._channel && self._channel.bufferedAmount) || 0
+  }
+})
+
+Peer.prototype.address = function () {
+  var self = this
+  return { port: self.localPort, family: 'IPv4', address: self.localAddress }
+}
 
 Peer.prototype.send = function (chunk, cb) {
   var self = this
@@ -12577,7 +12584,7 @@ Peer.prototype.signal = function (data) {
       data = {}
     }
   }
-  self._debug('signal')
+  self._debug('signal()')
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
@@ -12691,7 +12698,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   }
 
   if (self._channel.bufferedAmount) {
-    self._debug('applying backpressure (bufferedAmount $s)', self._channel.bufferedAmount)
+    self._debug('applying backpressure (bufferedAmount %s)', self._channel.bufferedAmount)
     self._cb = cb
   } else {
     cb(null)
@@ -12707,6 +12714,7 @@ Peer.prototype._createOffer = function () {
     speedHack(offer)
     self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
     var sendOffer = function () {
+      self._debug('signal')
       self.emit('signal', self._pc.localDescription || offer)
     }
     if (self.trickle || self._iceComplete) sendOffer()
@@ -12723,6 +12731,7 @@ Peer.prototype._createAnswer = function () {
     speedHack(answer)
     self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
     var sendAnswer = function () {
+      self._debug('signal')
       self.emit('signal', self._pc.localDescription || answer)
     }
     if (self.trickle || self._iceComplete) sendAnswer()
@@ -12735,8 +12744,8 @@ Peer.prototype._onIceConnectionStateChange = function () {
   if (self.destroyed) return
   var iceGatheringState = self._pc.iceGatheringState
   var iceConnectionState = self._pc.iceConnectionState
-  self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
   self._debug('iceConnectionStateChange %s %s', iceGatheringState, iceConnectionState)
+  self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
     self._pcReady = true
     self._maybeReady()
@@ -12749,7 +12758,52 @@ Peer.prototype._onIceConnectionStateChange = function () {
 Peer.prototype._maybeReady = function () {
   var self = this
   self._debug('maybeReady pc %s channel %s', self._pcReady, self._channelReady)
-  if (!self.connected && self._pcReady && self._channelReady) {
+  if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
+  self._connecting = true
+
+  if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
+    self._pc.getStats(null, function (res) {
+      var items = []
+      res.forEach(function (item) {
+        items.push(item)
+      })
+      onStats(items)
+    }, self._onError.bind(self))
+  } else {
+    self._pc.getStats(function (res) {
+      var items = []
+      res.result().forEach(function (result) {
+        var item = {}
+        result.names().forEach(function (name) {
+          item[name] = result.stat(name)
+        })
+        item.id = result.id
+        item.type = result.type
+        item.timestamp = result.timestamp
+        items.push(item)
+      })
+      onStats(items)
+    })
+  }
+
+  function onStats (items) {
+    items.forEach(function (item) {
+      if (item.type === 'remotecandidate') {
+        self.remoteAddress = item.ipAddress
+        self.remoteFamily = 'IPv4'
+        self.remotePort = Number(item.portNumber)
+        self._debug(
+          'connect remote: %s:%s (%s)',
+          self.remoteAddress, self.remotePort, self.remoteFamily
+        )
+      } else if (item.type === 'localcandidate' && item.candidateType === 'host') {
+        self.localAddress = item.ipAddress
+        self.localPort = Number(item.portNumber)
+        self._debug('connect local: %s:%s', self.localAddress, self.localPort)
+      }
+    })
+
+    self._connecting = false
     self.connected = true
     self._buffer.forEach(function (chunk) {
       self.send(chunk)
@@ -12764,8 +12818,8 @@ Peer.prototype._maybeReady = function () {
 Peer.prototype._onSignalingStateChange = function () {
   var self = this
   if (self.destroyed) return
-  self.emit('signalingStateChange', self._pc.signalingState)
   self._debug('signalingStateChange %s', self._pc.signalingState)
+  self.emit('signalingStateChange', self._pc.signalingState)
 }
 
 Peer.prototype._onIceCandidate = function (event) {
@@ -12831,6 +12885,20 @@ Peer.prototype._debug = function () {
   var id = self.channelName && self.channelName.substring(0, 7)
   args[0] = '[' + id + '] ' + args[0]
   debug.apply(null, args)
+}
+
+function getBrowserRTC () {
+  if (typeof window === 'undefined') return null
+  var wrtc = {
+    RTCPeerConnection: window.mozRTCPeerConnection || window.RTCPeerConnection ||
+      window.webkitRTCPeerConnection,
+    RTCSessionDescription: window.mozRTCSessionDescription ||
+      window.RTCSessionDescription || window.webkitRTCSessionDescription,
+    RTCIceCandidate: window.mozRTCIceCandidate || window.RTCIceCandidate ||
+      window.webkitRTCIceCandidate
+  }
+  if (!wrtc.RTCPeerConnection) return null
+  return wrtc
 }
 
 function speedHack (obj) {
@@ -13459,7 +13527,7 @@ module.exports={
   "gitHead": "92b9eec5a0e7bf8e78c76c7b8cfdfaa81df187d1",
   "_id": "webtorrent@0.33.0",
   "_shasum": "80cb0e2dba6a54791444afd5d70527e3ff923f69",
-  "_from": "webtorrent@*",
+  "_from": "webtorrent@>=0.33.0 <0.34.0",
   "_npmVersion": "2.7.4",
   "_nodeVersion": "0.12.2",
   "_npmUser": {
