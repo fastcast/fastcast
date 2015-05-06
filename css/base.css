@@ -2,15 +2,15 @@
  * Globals
  */
 
- /* Links */
- a,
- a:focus {
-   color: #6a9fb5;
- }
- a:hover {
-   color: #3d3d62;
-   text-decoration: none;
- }
+/* Links */
+a,
+a:focus {
+  color: #6a9fb5;
+}
+a:hover {
+  color: #3d3d62;
+  text-decoration: none;
+}
 
 
 /*
@@ -36,6 +36,7 @@
 .inner {
   padding: 30px;
 }
+\
 
 
 /*
