@@ -108,8 +108,16 @@ body {
   width: 100%;
   /* Set the fixed height of the footer here */
   height: 60px;
-  background-color: #f5f5f5;
+  background-color: #3d3d62;
+}
+/* Footer links */
+.footer a {
+  color: #fff;
+}
+.footer a:hover {
+  text-decoration: underline;
 }
 .container .text-muted {
   margin: 20px 0;
+  color: rgba(255,255,255,.6);
 }

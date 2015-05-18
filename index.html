@@ -92,7 +92,7 @@
           <span class="sr-only">Next</span>
         </a>
         <!-- Down button -->
-        <a id="scrollBelow" class="button-down"><i class="fa fa-3x fa-arrow-circle-down"></i></a>
+        <a id="scrollDown" class="button-down"><i class="fa fa-3x fa-arrow-circle-down"></i></a>
       </div>
     </div>
 
@@ -198,6 +198,7 @@
 
     <!-- Footer -->
     <footer class="footer">
+      <a id="scrollUp" class="logo pull-left"></a>
       <div class="container">
         <p class="text-muted">&copy; 2015 Fastcast. Powered by <a href="http://webtorrent.io">WebTorrent</a>.</p>
       </div>
@@ -220,11 +221,16 @@
           $(this).parent().carousel('next')
         })
       })
-      $("#scrollBelow").click(function() {
+      $("#scrollDown").click(function() {
         $('html, body').animate({
-          scrollTop: $("#featuredVideos").offset().top
+          scrollTop: $('#featuredVideos').offset().top
         }, 1000)
-      });
+      })
+      $("#scrollUp").click(function() {
+        $('html, body').animate({
+          scrollTop: $('body').offset().top
+        }, 1000)
+      })
     </script>
 
     <!-- Twitter -->

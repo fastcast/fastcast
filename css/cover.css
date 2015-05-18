@@ -139,9 +139,9 @@ body {
   position: relative;
   bottom: 60px;
   z-index: 10;
-  -webkit-transition: all .2s ease-in-out;
-       -o-transition: all .2s ease-in-out;
-          transition: all .2s ease-in-out;
+  -webkit-transition: all .2s linear;
+       -o-transition: all .2s linear;
+          transition: all .2s linear;
 }
 
 
@@ -228,18 +228,18 @@ body {
   width: 100%;
   /* Set the fixed height of the footer here */
   height: 60px;
-  background-color: #f5f5f5;
+  background-color: #3d3d62;
 }
 /* Footer links */
-.footer a,
-.footer a:focus {
-  color: #6a9fb5;
+.footer a {
+  color: #fff;
 }
 .footer a:hover {
   text-decoration: underline;
 }
 .container .text-muted {
   margin: 20px 0;
+  color: rgba(255,255,255,.6);
 }
 .social-buttons {
   padding: 22px 0 17px;
@@ -253,4 +253,21 @@ body {
 .github-btn {
   overflow: hidden;
   border: 0;
+}
+.logo {
+  cursor: pointer;
+  height: 40px;
+  width: 40px;
+  background: url(../img/fastcast.svg);
+  background-size: 100% 100%;
+  margin: 10px;
+  opacity: .6;
+  -webkit-transition: opacity .6s linear;
+       -o-transition: opacity .6s linear;
+          transition: opacity .6s linear;
+}
+.logo:hover {
+  background: url(../img/chevron-up.svg);
+  background-size: 100% 100%;
+  opacity:1;
 }
