@@ -260,6 +260,7 @@ body {
        -o-transition: opacity .6s linear;
           transition: opacity .6s linear;
 }
+.logo:focus,
 .logo:hover {
   background: url(../img/chevron-up.svg);
   background-size: 48px 48px;
