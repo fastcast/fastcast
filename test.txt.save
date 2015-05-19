@@ -122,6 +122,16 @@ a:hover {
 .carousel-control.right {
   background-image: none;
 }
+/* Down button */
+.button-down {
+  position: relative;
+  bottom: 60px;
+  z-index: 10;
+  cursor: pointer;
+  -webkit-transition: all .2s linear;
+       -o-transition: all .2s linear;
+          transition: all .2s linear;
+}
 /* Backgound images */
 .imageone {
   background-image: url('../img/imageone.jpg');
@@ -131,25 +141,6 @@ a:hover {
 }
 .imagethree {
   background-image: url('../img/imagethree.jpg');
-}
-
-/* Down button */
-.button-down {
-  position: relative;
-  bottom: 60px;
-  cursor: pointer;
-  -webkit-transition: all .2s linear;
-       -o-transition: all .2s linear;
-          transition: all .2s linear;
-}
-/* Social buttons */
-.social-buttons {
-  position: relative;
-  bottom: 30px;
-}
-.github-btn {
-  overflow: hidden;
-  border: 0;
 }
 
 
@@ -218,11 +209,30 @@ a:hover {
 
 
 /*
+ * Social
+ */
+
+.social-buttons {
+  padding: 22px 0 17px;
+  text-align: center;
+  background-color: #f5f5f5;
+}
+.social-buttons .list-inline {
+  margin-bottom: 0;
+}
+.github-btn {
+  overflow: hidden;
+  border: 0;
+}
+
+
+/*
  * Footer
  */
 
 html {
   position: relative;
+
   min-height: 100%;
 }
 body {
@@ -241,27 +251,10 @@ body {
   margin: 20px 0;
   color: rgba(255, 255, 255, 0.6);
 }
+
 /* Footer links */
 .footer a:hover {
   color: #fff;
   text-decoration: underline;
 }
 
-/* Logo up button */
-.logo {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 20px;
-  cursor: pointer;
-  background: url(../img/fastcast.svg);
-  background-size: 48px 48px;
-  opacity: 0.6;
-  -webkit-transition: opacity .6s linear;
-       -o-transition: opacity .6s linear;
-          transition: opacity .6s linear;
-}
-.logo:hover {
-  background: url(../img/chevron-up.svg);
-  background-size: 48px 48px;
-  opacity: 1;
-}

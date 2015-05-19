@@ -33,20 +33,20 @@
        x="2"
        y="2"
        id="rect2987"
-       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+       style="fill:none;fill-opacity:1;stroke:#3d3d62;stroke-width:4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
   </g>
   <g
      id="layer2">
     <path
        d="m 12,12 0,80 10,0 0,10 10,0 10,-10 0,-20 20,0 10,-10 0,-10 -30,0 0,-20 60,0 0,-20 z"
        id="path2990"
-       style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+       style="fill:none;stroke:#3d3d62;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   </g>
   <g
      id="layer3">
     <path
        d="m 12,12 0,70 10,0 0,10 20,0 0,-20 20,0 10,-10 0,-10 -30,0 0,-20 60,0 0,-20 z"
        id="path3761"
-       style="fill:#ffffff;fill-opacity:1;stroke:none" />
+       style="fill:#3d3d62;fill-opacity:1;stroke:none" />
   </g>
 </svg>

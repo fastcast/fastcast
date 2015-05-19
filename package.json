@@ -36,7 +36,9 @@
     "webtorrent": "^0.33.0"
   },
   "devDependencies": {
+    "bootlint": "^0.12.0",
     "browserify": "^10.0.0",
+    "recess": "^1.1.9",
     "standard": "^3.7.2"
   }
 }
