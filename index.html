@@ -191,14 +191,11 @@
       </div><!-- /.row -->
     </div>
 
-    <div class="container">
-      <a id="scrollUp" class="logo pull-right"></a>
-    </div>
-
     <!-- Footer -->
     <footer class="footer">
       <div class="container">
-        <p class="text-muted">&copy; 2015 Fastcast. Powered by <a href="http://webtorrent.io">WebTorrent</a>.</p>
+        <p><a id="scrollUp" class="logo pull-right"></a></p>
+        <p>&copy; 2015 Fastcast. Powered by <a href="http://webtorrent.io">WebTorrent</a>.</p>
       </div>
     </footer>
 
@@ -212,19 +209,19 @@
     <script src="js/jquery.mobile.custom.min.js"></script>
     <script>
       $(document).ready(function() {
-        $(".carousel-inner").swiperight(function() {
+        $('.carousel-inner').swiperight(function() {
           $(this).parent().carousel('prev')
         })
-        $(".carousel-inner").swipeleft(function() {
+        $('.carousel-inner').swipeleft(function() {
           $(this).parent().carousel('next')
         })
       })
-      $("#scrollDown").click(function() {
+      $('#scrollDown').click(function() {
         $('html, body').animate({
           scrollTop: $('#featuredVideos').offset().top
         }, 1000)
       })
-      $("#scrollUp").click(function() {
+      $('#scrollUp').click(function() {
         $('html, body').animate({
           scrollTop: $('body').offset().top
         }, 1000)
