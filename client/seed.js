@@ -1,49 +1,50 @@
-var dragDrop = require('drag-drop/buffer')
-var toBuffer = require('typedarray-to-buffer')
-var upload = require('upload-element')
-var prettysize = require('prettysize')
+var dragDrop = require('drag-drop')
+var uploadElement = require('upload-element')
+var path = require('path')
+var prettyBytes = require('pretty-bytes')
 var WebTorrent = require('webtorrent')
+
+var util = require('./util')
 
 var client = new WebTorrent()
 
-upload(document.querySelector('input[name=upload]'), { type: 'array' }, onFile)
-
-function onFile (err, results) {
-  var files = results.map(function (r) {
-    var buf = toBuffer(new Uint8Array(r.target.result))
-    buf.name = r.file.name
-    buf.size = r.file.size
-    buf.lastModifiedDate = r.file.lastModifiedDate
-    buf.type = r.file.type
-    return buf
-  })
-  client.seed(files, onTorrent)
-}
-
-dragDrop('body', function (files) {
-  client.seed(files, onTorrent)
+var upload = document.querySelector('input[name=upload]')
+uploadElement(upload, function (err, files) {
+  if (err) return util.error(err)
+  files = files.map(function (file) { return file.file })
+  onFiles(files)
 })
 
+dragDrop('body', onFiles)
+
+function onFiles (files) {
+  client.seed(files, onTorrent)
+}
+
 function onTorrent (torrent) {
-  logAppend('Thanks for seeding!')
-  logAppend('Torrent info hash: ' + torrent.infoHash + ' <a href="https://instant.io/#' + torrent.infoHash + '" target="_blank">(link)</a>')
-  logAppend('Progress: starting...')
+  upload.value = upload.defaultValue // reset upload element
 
-  torrent.swarm.on('upload', function () {
-    logReplace('Upload speed: ' + prettysize(client.uploadSpeed()) + '/s')
-  })
-}
+  var torrentFileName = path.basename(torrent.name, path.extname(torrent.name)) + '.torrent'
 
-var log = document.querySelector('.log')
+  util.log(
+    'Torrent info hash: ' + torrent.infoHash + ' ' +
+    '<a href="https://instant.io/#' + torrent.infoHash + '" target="_blank">[Share link]</a> ' +
+    '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
+    '<a href="' + torrent.torrentFileURL + '" target="_blank" download="' + torrentFileName + '">[Download .torrent]</a>'
+  )
 
-// append a P to the log
-function logAppend (str) {
-  var p = document.createElement('p')
-  p.innerHTML = str
-  log.appendChild(p)
-}
+  function updateSpeed () {
+    var progress = (100 * torrent.downloaded / torrent.parsedTorrent.length).toFixed(1)
+    util.updateSpeed(
+      '<b>Peers:</b> ' + torrent.swarm.wires.length + ' ' +
+      '<b>Progress:</b> ' + progress + '% ' +
+      '<b>Download speed:</b> ' + prettyBytes(client.downloadSpeed()) + '/s ' +
+      '<b>Upload speed:</b> ' + prettyBytes(client.uploadSpeed()) + '/s'
+    )
+  }
 
-// replace the last P in the log
-function logReplace (str) {
-  log.lastChild.innerHTML = str
+  torrent.swarm.on('download', updateSpeed)
+  torrent.swarm.on('upload', updateSpeed)
+  setInterval(updateSpeed, 5000)
+  updateSpeed()
 }

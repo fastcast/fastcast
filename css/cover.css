@@ -75,8 +75,7 @@ a:hover {
   padding-left: 0;
   font-size: 16px;
   font-weight: bold;
-  /* IE8 proofing */
-  color: #fff;
+  color: #fff; /* IE8 proofing */
   color: rgba(255, 255, 255, 0.75);
   border-bottom: 2px solid transparent;
 }
@@ -236,7 +235,7 @@ a:hover {
 
 /* Padding below the footer and lighter footer text */
 .footer {
-  padding-top :40px;
+  padding-top: 40px;
   padding-bottom: 40px;
   margin-top: 100px;
   color: #5a5a5a;

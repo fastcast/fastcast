@@ -5,10 +5,10 @@
 /* Links */
 a,
 a:focus {
-  color: #6a9fb5;
+  color: #3d3d62;
 }
 a:hover {
-  color: #3d3d62;
+  color: #6a9fb5;
   text-decoration: none;
 }
 
@@ -83,6 +83,13 @@ a:hover {
  * Videos
  */
 
+.speed:not(:empty) {
+  padding:20px;
+  margin:10px 0;
+  background:#eee
+}
+
+/* Video thumbnails */
 .videos > div {
   -webkit-transition: all .3s ease-in-out;
        -o-transition: all .3s ease-in-out;
