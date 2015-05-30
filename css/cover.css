@@ -154,15 +154,6 @@ a:hover {
        -o-transition: all .2s linear;
           transition: all .2s linear;
 }
-/* Social buttons */
-.social-buttons {
-  position: relative;
-  bottom: 30px;
-}
-.github-btn {
-  overflow: hidden;
-  border: 0;
-}
 
 
 /*
@@ -224,6 +215,10 @@ a:hover {
   margin-left: 10px;
   color: #5a5a5a;
 }
+.marketing .img-circle {
+  width: 140px;
+  height: 140px;
+}
 .featurette-divider {
   margin: 80px 0;
 }
@@ -239,6 +234,7 @@ a:hover {
   padding-bottom: 40px;
   margin-top: 100px;
   color: #5a5a5a;
+  text-align: center;
 }
 /* Footer links */
 .footer a,
@@ -248,6 +244,15 @@ a:hover {
 .footer a:hover {
   color: #6a9fb5;
   text-decoration: underline;
+}
+
+/* Social buttons */
+.social-buttons {
+  margin-bottom: 30px;
+}
+.github-btn {
+  overflow: hidden;
+  border: 0;
 }
 
 /* Logo up button */
