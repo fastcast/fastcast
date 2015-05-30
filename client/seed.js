@@ -6,6 +6,10 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
+var TRACKER_URL = 'ws://tracker.fastcast.nz'
+
+global.WEBTORRENT_ANNOUNCE = [ TRACKER_URL ]
+
 var client = new WebTorrent()
 
 var upload = document.querySelector('input[name=upload]')
