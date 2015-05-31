@@ -6556,23 +6556,22 @@ Torrent.prototype._onParsedTorrent = function (parsedTorrent) {
 
   if (self.parsedTorrent.name) self.name = self.parsedTorrent.name // preliminary name
 
+  // Allow specifying trackers via `opts` parameter
   if (self.opts.announce) {
-    self.parsedTorrent.announce.push.apply(
-      self.parsedTorrent.announce, self.opts.announce
-    )
+    self.parsedTorrent.announce =
+      self.parsedTorrent.announce.concat(self.opts.announce)
+  }
+
+  // So `webtorrent-hybrid` can force specific trackers to be used
+  if (global.WEBTORRENT_ANNOUNCE) {
+    self.parsedTorrent.announce =
+      self.parsedTorrent.announce.concat(global.WEBTORRENT_ANNOUNCE)
   }
 
   // When no trackers specified, use some reasonable defaults
   if (self.parsedTorrent.announce.length === 0) {
     self.parsedTorrent.announce = createTorrent.announceList.map(function (list) {
       return list[0]
-    })
-  }
-
-  // So `webtorrent-hybrid` can force specific trackers to be used
-  if (global.WEBTORRENT_ANNOUNCE) {
-    global.WEBTORRENT_ANNOUNCE.forEach(function (url) {
-      self.parsedTorrent.announce.push(url)
     })
   }
 
@@ -6759,9 +6758,8 @@ Torrent.prototype.destroy = function (cb) {
 Torrent.prototype.addPeer = function (peer) {
   var self = this
   // TODO: extract IP address from peer object and check blocklist
-  if (typeof peer === 'string'
-      && self.client.blocked
-      && self.client.blocked.contains(addrToIPPort(peer)[0])) {
+  if (typeof peer === 'string' && self.client.blocked &&
+      self.client.blocked.contains(addrToIPPort(peer)[0])) {
     self.numBlockedPeers += 1
     self.emit('blockedPeer', peer)
     return false
@@ -11420,7 +11418,7 @@ exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
 },{"./lib/_stream_duplex.js":32,"./lib/_stream_passthrough.js":33,"./lib/_stream_readable.js":34,"./lib/_stream_transform.js":35,"./lib/_stream_writable.js":36,"stream":121}],41:[function(require,module,exports){
-(function (Buffer){
+(function (global,Buffer){
 /*global Blob, FileList */
 
 module.exports = createTorrent
@@ -11661,11 +11659,31 @@ function getPieceList (files, pieceLength, cb) {
 }
 
 function onFiles (files, opts, cb) {
-  var announceList = opts.announceList !== undefined
-    ? opts.announceList
-    : opts.announce !== undefined
-      ? opts.announce.map(function (u) { return [ u ] })
-      : module.exports.announceList // default
+  var announceList = opts.announceList
+
+  if (!announceList) {
+    if (typeof opts.announce === 'string') announceList = [ [ opts.announce ] ]
+    else if (Array.isArray(opts.announce)) {
+      announceList = opts.announce.map(function (u) { return [ u ] })
+    }
+  }
+
+  if (!announceList) announceList = []
+
+  if (global.WEBTORRENT_ANNOUNCE) {
+    if (typeof global.WEBTORRENT_ANNOUNCE === 'string') {
+      announceList.push([ [ global.WEBTORRENT_ANNOUNCE ] ])
+    } else if (Array.isArray(global.WEBTORRENT_ANNOUNCE)) {
+      announceList = announceList.concat(global.WEBTORRENT_ANNOUNCE.map(function (u) {
+        return [ u ]
+      }))
+    }
+  }
+
+  // When no trackers specified, use some reasonable defaults
+  if (announceList.length === 0) {
+    announceList = announceList.concat(module.exports.announceList)
+  }
 
   var torrent = {
     info: {
@@ -11807,7 +11825,7 @@ function getStreamStream (readable, file) {
   }
 }
 
-}).call(this,require("buffer").Buffer)
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
 },{"bencode":42,"block-stream2":30,"buffer":97,"dezalgo":53,"filestream/read":46,"flatten":47,"fs":95,"multistream":59,"once":61,"path":104,"piece-length":48,"run-parallel":72,"simple-sha1":73,"stream":121}],42:[function(require,module,exports){
 arguments[4][26][0].apply(exports,arguments)
 },{"./lib/decode":43,"./lib/encode":45,"dup":26}],43:[function(require,module,exports){
@@ -14588,6 +14606,7 @@ function WebSocketTracker (client, announceUrl, opts) {
 
 WebSocketTracker.prototype.announce = function (opts) {
   var self = this
+  if (self.destroyed) return
   if (!self._socket.connected) {
     return self._socket.once('connect', self.announce.bind(self, opts))
   }
@@ -14611,6 +14630,7 @@ WebSocketTracker.prototype.announce = function (opts) {
 
 WebSocketTracker.prototype.scrape = function (opts) {
   var self = this
+  if (self.destroyed) return
   self._onSocketError(new Error('scrape not supported ' + self._announceUrl))
 }
 
@@ -15932,7 +15952,7 @@ module.exports = function zeroFill (width, number, pad) {
 module.exports={
   "name": "webtorrent",
   "description": "Streaming torrent client",
-  "version": "0.48.1",
+  "version": "0.48.2",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
@@ -16039,10 +16059,10 @@ module.exports={
     "test-browser-local": "zuul --local -- test/basic.js",
     "test-node": "tape test/*.js"
   },
-  "gitHead": "95f7f3f5ca2e88537813c4176d2eeb56b0f06daf",
-  "_id": "webtorrent@0.48.1",
-  "_shasum": "003651c8783e13d369d42ce4293f5666e4478118",
-  "_from": "webtorrent@>=0.48.1 <0.49.0",
+  "gitHead": "8c3518a658c2d79f6ccf3223a89607a5313765fb",
+  "_id": "webtorrent@0.48.2",
+  "_shasum": "e28cd83a2a04e3bbcd8f76295346a488aa7725da",
+  "_from": "webtorrent@>=0.48.2 <0.49.0",
   "_npmVersion": "2.9.1",
   "_nodeVersion": "0.12.3",
   "_npmUser": {
@@ -16056,11 +16076,11 @@ module.exports={
     }
   ],
   "dist": {
-    "shasum": "003651c8783e13d369d42ce4293f5666e4478118",
-    "tarball": "http://registry.npmjs.org/webtorrent/-/webtorrent-0.48.1.tgz"
+    "shasum": "e28cd83a2a04e3bbcd8f76295346a488aa7725da",
+    "tarball": "http://registry.npmjs.org/webtorrent/-/webtorrent-0.48.2.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/webtorrent/-/webtorrent-0.48.1.tgz"
+  "_resolved": "https://registry.npmjs.org/webtorrent/-/webtorrent-0.48.2.tgz"
 }
 
 },{}],95:[function(require,module,exports){
@@ -21593,17 +21613,11 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
-var TRACKER_URL = 'ws://tracker.fastcast.nz'
-
-global.WEBTORRENT_ANNOUNCE = [ TRACKER_URL ]
+global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
 
 var client = new WebTorrent()
 
-function download (magnetUri) {
-  client.add(magnetUri, onTorrent)
-}
-
-download(magnetUri)
+client.add(magnetUri, onTorrent)
 
 function onTorrent (torrent) {
   var torrentFileName = path.basename(torrent.name, path.extname(torrent.name)) + '.torrent'

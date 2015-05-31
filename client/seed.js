@@ -6,9 +6,7 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
-var TRACKER_URL = 'ws://tracker.fastcast.nz'
-
-global.WEBTORRENT_ANNOUNCE = [ TRACKER_URL ]
+global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
 
 var client = new WebTorrent()
 

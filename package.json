@@ -5,11 +5,11 @@
   "main": "index.html",
   "scripts": {
     "test": "standard",
-    "build": "browserify client -o js/bundle.js && browserify client/seed.js -o js/bundle-seed.js"
+    "build": "browserify client/stream.js -o js/bundle.js && browserify client/seed.js -o js/bundle-seed.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jakefb/fastcast.git"
+    "url": "https://github.com/fastcast/fastcast.git"
   },
   "keywords": [
     "stream",
@@ -24,7 +24,7 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jakefb/fastcast/issues"
+    "url": "https://github.com/fastcast/fastcast/issues"
   },
   "homepage": "http://fastcast.nz",
   "dependencies": {
@@ -33,7 +33,7 @@
     "typedarray-to-buffer": "^3.0.3",
     "upload-element": "^1.0.1",
     "videostream": "1.0.0",
-    "webtorrent": "^0.48.1"
+    "webtorrent": "^0.48.2"
   },
   "devDependencies": {
     "bootlint": "^0.12.0",

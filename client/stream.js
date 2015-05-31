@@ -5,17 +5,11 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
-var TRACKER_URL = 'ws://tracker.fastcast.nz'
-
-global.WEBTORRENT_ANNOUNCE = [ TRACKER_URL ]
+global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
 
 var client = new WebTorrent()
 
-function download (magnetUri) {
-  client.add(magnetUri, onTorrent)
-}
-
-download(magnetUri)
+client.add(magnetUri, onTorrent)
 
 function onTorrent (torrent) {
   var torrentFileName = path.basename(torrent.name, path.extname(torrent.name)) + '.torrent'
