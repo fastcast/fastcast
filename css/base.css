@@ -83,6 +83,10 @@ a:hover {
  * Videos
  */
 
+video {
+  width: 100%;
+}
+
 /* Video thumbnails */
 .videos div {
   -webkit-transition: all .3s ease-in-out;

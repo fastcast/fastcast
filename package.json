@@ -32,13 +32,13 @@
     "pretty-bytes": "^2.0.1",
     "typedarray-to-buffer": "^3.0.3",
     "upload-element": "^1.0.1",
-    "videostream": "1.0.0",
-    "webtorrent": "^0.48.2"
+    "videostream": "1.2.1",
+    "webtorrent": "0.x"
   },
   "devDependencies": {
     "bootlint": "^0.12.0",
-    "browserify": "^10.2.3",
+    "browserify": "^11.0.1",
     "recess": "^1.1.9",
-    "standard": "^4.0.0"
+    "standard": "^5.2.1"
   }
 }
