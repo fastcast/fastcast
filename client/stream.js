@@ -1,6 +1,5 @@
 var path = require('path')
 var prettyBytes = require('pretty-bytes')
-var videostream = require('videostream')
 var WebTorrent = require('webtorrent')
 
 var util = require('./util')
@@ -21,7 +20,7 @@ function onTorrent (torrent) {
   )
 
   function updateSpeed () {
-    var progress = (100 * torrent.downloaded / torrent.parsedTorrent.length).toFixed(1)
+    var progress = (100 * torrent.progress).toFixed(1)
     util.updateSpeed(
       '<b>Peers:</b> ' + torrent.swarm.wires.length + ' ' +
       '<b>Progress:</b> ' + progress + '% ' +
@@ -41,21 +40,8 @@ function onTorrent (torrent) {
   updateSpeed()
 
   torrent.files.forEach(function (file) {
-    // Got torrent metadata!
-    console.log('Torrent info hash:', torrent.infoHash)
-
-    // Let's say the first file is a webm (vp8) or mp4 (h264) video...
-    var file = torrent.files[0]
-
     // Create a video element
-    var player = document.getElementById('player')
-    var video = document.createElement('video')
-    video.controls = true
-    player.appendChild(video)
-    video.setAttribute('style', 'width: 100%')
-
-    // Stream the video into the video tag
-    videostream(file, video)
+    file.appendTo('#player')
 
     document.getElementById('downloadButton').onclick = function() {
       var download = document.getElementById('download')

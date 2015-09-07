@@ -32,7 +32,6 @@
     "pretty-bytes": "^2.0.1",
     "typedarray-to-buffer": "^3.0.3",
     "upload-element": "^1.0.1",
-    "videostream": "1.2.1",
     "webtorrent": "0.x"
   },
   "devDependencies": {
