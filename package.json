@@ -28,9 +28,9 @@
   },
   "homepage": "http://fastcast.nz",
   "dependencies": {
-    "drag-drop": "^2.2.1",
+    "drag-drop": "^2.3.0",
     "pretty-bytes": "^2.0.1",
-    "typedarray-to-buffer": "^3.0.3",
+    "typedarray-to-buffer": "^3.0.4",
     "upload-element": "^1.0.1",
     "webtorrent": "0.x"
   },
