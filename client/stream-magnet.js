@@ -1,10 +1,15 @@
 var path = require('path')
+var Peer = require('simple-peer')
 var prettyBytes = require('pretty-bytes')
 var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
 global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
+
+if (!Peer.WEBRTC_SUPPORT) {
+  util.error('Sorry, your browser is unsupported. Please try using Chrome.')
+}
 
 var client = new WebTorrent()
 
@@ -24,26 +29,21 @@ function onTorrent (torrent) {
     util.updateSpeed(
       '<b>Peers:</b> ' + torrent.swarm.wires.length + ' ' +
       '<b>Progress:</b> ' + progress + '% ' +
-      '<b>Download speed:</b> ' + prettyBytes(client.downloadSpeed()) + '/s ' +
-      '<b>Upload speed:</b> ' + prettyBytes(client.uploadSpeed()) + '/s'
+      '<b>Download speed:</b> ' + prettyBytes(client.downloadSpeed()).toFixed(1) + '/s ' +
+      '<b>Upload speed:</b> ' + prettyBytes(client.uploadSpeed()).toFixed(1) + '/s'
     )
-    var progressBar = document.getElementById('progressBar')
     progressBar.setAttribute('aria-valuenow', progress)
     progressBar.setAttribute('style', 'width: ' + progress + '%')
   }
 
-  progressBar.classList.add('active')
-
-  torrent.swarm.on('download', updateSpeed)
-  torrent.swarm.on('upload', updateSpeed)
-  setInterval(updateSpeed, 5000)
   updateSpeed()
+  setInterval(updateSpeed, 500)
 
   torrent.files.forEach(function (file) {
     // Create a video element
     file.appendTo('#player')
 
-    document.getElementById('downloadButton').onclick = function() {
+    downloadButton.addEventListener('click', function () {
       var download = document.getElementById('download')
       download.classList.remove('hidden')
 
@@ -53,17 +53,13 @@ function onTorrent (torrent) {
 
         // Hide download progress
         download.classList.add('hidden')
-        var progress = document.getElementById('progress')
-        progress.classList.add('hidden')
 
         // Add a link to the page
         var a = document.createElement('a')
-        a.download = file.name
-        a.href = url
-        download.appendChild(a)
+        a.download = window.URL.createObjectURL(url)
         a.click()
         window.URL.revokeObjectURL(url)
       })
-    }
+    })
   })
 }

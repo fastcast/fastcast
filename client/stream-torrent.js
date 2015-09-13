@@ -1,5 +1,6 @@
 var parseTorrent = require('parse-torrent')
 var path = require('path')
+var Peer = require('simple-peer')
 var prettyBytes = require('pretty-bytes')
 var http = require('stream-http')
 var WebTorrent = require('webtorrent')
@@ -8,14 +9,18 @@ var util = require('./util')
 
 global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
 
+if (!Peer.WEBRTC_SUPPORT) {
+  util.error('Sorry, your browser is unsupported. Please try using Chrome.')
+}
+
 http.get('/torrents/' + torrentName, function (res) {
   var data = [] // List of Buffer objects
 
-  res.on("data", function(chunk) {
+  res.on('data', function (chunk) {
     data.push(chunk) // Append Buffer object
   })
 
-  res.on("end", function() {
+  res.on('end', function () {
     data = Buffer.concat(data) // Make one large Buffer of it
 
     var torrentParsed = parseTorrent(data) // Parse the Buffer
@@ -41,24 +46,18 @@ http.get('/torrents/' + torrentName, function (res) {
           '<b>Download speed:</b> ' + prettyBytes(client.downloadSpeed()) + '/s ' +
           '<b>Upload speed:</b> ' + prettyBytes(client.uploadSpeed()) + '/s'
         )
-        var progressBar = document.getElementById('progressBar')
         progressBar.setAttribute('aria-valuenow', progress)
         progressBar.setAttribute('style', 'width: ' + progress + '%')
       }
 
-      progressBar.classList.add('active')
-
-      torrent.swarm.on('download', updateSpeed)
-      torrent.swarm.on('upload', updateSpeed)
-      setInterval(updateSpeed, 5000)
       updateSpeed()
+      setInterval(updateSpeed, 500)
 
       torrent.files.forEach(function (file) {
         // Create a video element
         file.appendTo('#player')
 
-        document.getElementById('downloadButton').onclick = function() {
-          var download = document.getElementById('download')
+        downloadButton.addEventListener('click', function () {
           download.classList.remove('hidden')
 
           // Get a url for each file
@@ -67,18 +66,14 @@ http.get('/torrents/' + torrentName, function (res) {
 
             // Hide download progress
             download.classList.add('hidden')
-            var progress = document.getElementById('progress')
-            progress.classList.add('hidden')
 
             // Add a link to the page
             var a = document.createElement('a')
-            a.download = file.name
-            a.href = url
-            download.appendChild(a)
+            a.download = window.URL.createObjectURL(url)
             a.click()
             window.URL.revokeObjectURL(url)
           })
-        }
+        })
       })
     }
   })

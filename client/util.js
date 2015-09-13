@@ -1,6 +1,8 @@
+var downlaodButton = document.getElementById('downloadButton')
+var download = document.getElementById('download')
 var logElem = document.querySelector('.log')
+var progressBar = document.getElementById('progressBar')
 var speed = document.querySelector('.speed')
-var caption = document.querySelector('.caption')
 
 exports.log = function log (item) {
   if (typeof item === 'string') {
@@ -28,6 +30,6 @@ exports.warning = function warning (err) {
 exports.error = function error (err) {
   console.error(err.stack || err.message || err)
   var p = exports.log(err.message || err)
-  p.style.color = 'red'
+  p.style.color = '#3d3d62'
   p.style.fontWeight = 'bold'
 }
