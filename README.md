@@ -1,33 +1,26 @@
 Fastcast
 ========
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jakefb/fastcast?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fastcast/fastcast?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ### Share audio and video
 
-![fastcast-demo](http://i.imgur.com/UkVNqvP.gif)
+![fastcast-demo](https://raw.githubusercontent.com/fastcast/fastcast/master/img/fastcast-demo.png)
 
-**Fastcast** is a website for streaming audio and video content. The content is shared across a peer-to-peer network. Fastcast is powered by [WebTorrent](http://webtorrent.io): a streaming torrent client for node.js and the browser. This allows torrent files to be streamed in the browser. This project is open to contribution.
+**[Fastcast](http://fastcast.nz)** is a new way to experience the audio and video you love. Designed for fast, high quality content streaming.
+
+### Features
+
+- Streaming audio and video content
+- Utilises a peer-to-peer network, so that you can stream high quality audio and video
+- Powered by [WebTorrent](http://webtorrent.io): a streaming torrent client for the browser
 
 ### Support Fastcast
 
-- **[Become a seeder!](http://fastcast.nz/seed.html)** - Help share the vidoes on Fastcast
-
-### How do I use it?
-
-First of all, you need to download one of the videos by visiting [fastcast.nz/seed.html](http://fastcast.nz/seed.html). Download one file, for example, take the first video (AGITATION | NEW ZEALAND 4K).
-
-![screenshot-1](http://i.imgur.com/b1JIkqk.png)
-
-Once downloaded, you need to start seeding the video - for this scroll to the bottom of the page. In the selection box, select the video you downloaded, and if all goes well you should see in the logs "Creating .torrent file..."
-
-![screenshot-2](http://i.imgur.com/ZmkNYpy.png)
-
-Then go to the video page, in our case it's [fastcast.nz/videos/agitation-new-zealand-4k.html](http://fastcast.nz/videos/agitation-new-zealand-4k.html).
-
-![screenshot-3](http://i.imgur.com/qyornm2.jpg)
-
-As a result, we see the video streaming at the page and we can invite our friends to see.
+- **[Become a seeder!](http://fastcast.nz)** - Help share the vidoes on Fastcast by streaming them
+- **Join the conversation in [Gitter](https://gitter.im/fastcast/fastcast)** and share your ideas with everyone
+- **[Create a new issue](https://github.com/feross/fastcast/issues/new)** to report bugs
+- **[Fix an issue](https://github.com/feross/fastcast/issues?state=open)**
 
 ### License
 
