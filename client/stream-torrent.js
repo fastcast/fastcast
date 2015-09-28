@@ -13,7 +13,7 @@ if (!Peer.WEBRTC_SUPPORT) {
   util.error('Sorry, your browser is unsupported. Please try again using Chrome.')
 }
 
-http.get('/torrents/' + torrentName, function (res) {
+http.get('http://fastcast.nz/torrents/' + torrentName, function (res) {
   var data = [] // List of Buffer objects
 
   res.on('data', function (chunk) {
