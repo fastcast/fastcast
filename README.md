@@ -13,14 +13,14 @@ Fastcast
 
 - Streaming audio and video content
 - Utilises a peer-to-peer network, so that you can stream high quality audio and video
-- Powered by [WebTorrent](http://webtorrent.io): a streaming torrent client for the browser
+- Powered by [WebTorrent](https://webtorrent.io): a streaming torrent client for the browser
 
 ### Support Fastcast
 
 - **[Become a seeder!](http://fastcast.nz)** - Help share the vidoes on Fastcast by streaming them
 - **Join the conversation in [Gitter](https://gitter.im/fastcast/fastcast)** and share your ideas with everyone
-- **[Create a new issue](https://github.com/feross/fastcast/issues/new)** to report bugs
-- **[Fix an issue](https://github.com/feross/fastcast/issues?state=open)**
+- **[Create a new issue](https://github.com/fastcast/fastcast/issues/new)** to report bugs
+- **[Fix an issue](https://github.com/fastcast/fastcast/issues?state=open)**
 
 ### License
 
