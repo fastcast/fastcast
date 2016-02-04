@@ -9,10 +9,6 @@ var util = require('./util')
 
 global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
 
-if (!Peer.WEBRTC_SUPPORT) {
-  util.error('Sorry, your browser is unsupported. Please try again using Chrome.')
-}
-
 http.get('http://fastcast.nz/torrents/' + torrentName, function (res) {
   var data = [] // List of Buffer objects
 
