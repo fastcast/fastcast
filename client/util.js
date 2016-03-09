@@ -12,7 +12,6 @@ exports.log = function log (item) {
     return p
   } else {
     logElem.appendChild(item)
-    logElem.appendChild(document.createElement('br'))
     return item
   }
 }

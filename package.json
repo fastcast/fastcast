@@ -31,7 +31,7 @@
     "drag-drop": "^2.3.0",
     "parse-torrent": "^5.4.0",
     "pretty-bytes": "^3.0.0",
-    "simple-peer": "^5.11.5",
+    "simple-peer": "^6.0.2",
     "stream-http": "^2.0.0",
     "typedarray-to-buffer": "^3.0.4",
     "upload-element": "^1.0.1",
@@ -41,6 +41,6 @@
     "bootlint": "^0.14.2",
     "browserify": "^13.0.0",
     "recess": "^1.1.9",
-    "standard": "^5.3.1"
+    "standard": "^6.0.8"
   }
 }

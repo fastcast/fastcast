@@ -30,7 +30,7 @@ http.get('http://fastcast.nz/torrents/' + torrentName, function (res) {
 
       util.log(
         '<a class="btn btn-primary btn-xs" href="' + torrent.magnetURI + '" role="button"><i class="fa fa-magnet"></i> Magnet URI</a> ' +
-        '<a class="btn btn-primary btn-xs" href="' + torrent.torrentFileURL + '" target="_blank" download="' + torrentFileName + '" role="button"><i class="fa fa-download"></i> Download .torrent</a> ' +
+        '<a class="btn btn-primary btn-xs" href="' + torrent.torrentFileBlobURL + '" target="_blank" download="' + torrentFileName + '" role="button"><i class="fa fa-download"></i> Download .torrent</a> ' +
         '<a id="downloadButton" class="btn btn-primary btn-xs" role="button"><i class="fa fa-download"></i> Download ' + torrent.name + '</a>'
       )
 
@@ -62,10 +62,19 @@ http.get('http://fastcast.nz/torrents/' + torrentName, function (res) {
             download.classList.add('hidden')
 
             // Add a link to the page
+            // var a = document.createElement('a')
+            // a.download = window.URL.createObjectURL(url)
+            // a.click()
+            // window.URL.revokeObjectURL(url)
+
+            var logElem = document.querySelector('.log')
             var a = document.createElement('a')
-            a.download = window.URL.createObjectURL(url)
+            a.target = '_blank'
+            a.download = file.name
+            a.href = url
+            util.log(a)
             a.click()
-            window.URL.revokeObjectURL(url)
+            logElem.removeChild(a)
           })
         })
       })
