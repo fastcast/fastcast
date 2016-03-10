@@ -11,7 +11,7 @@ var util = require('./util')
 
 global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
 
-http.get('http://fastcast.nz/torrents/' + torrentName, function (res) {
+http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
   var data = [] // List of Buffer objects
 
   res.on('data', function (chunk) {

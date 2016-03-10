@@ -1,0 +1,20 @@
+<html><head>
+<link href="http://vjs.zencdn.net/5.4.4/video-js.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/webtorrent/latest/webtorrent.min.js"></script>
+</head><body><script>
+var client = new WebTorrent()
+var torrentId = 'magnet:?xt=urn:btih:13da9cd10df5c414054065f5db762acb0570c86b&dn=cityscape-chicago-ii.mp4&tr=ws%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.webtorrent.io&ws=http%3A%2F%2Ffastcast.nz%2Fdownloads%2Fcityscape-chicago-ii.mp4&ws=http%3A%2F%2Ffastcast.nz%2Fdownloads%2Fcityscape-chicago-ii.mp4'
+client.add(torrentId, function (torrent) {
+var file = torrent.files[0]
+
+file.renderTo('#YTAPI_html5_api', function (err, elem) {
+ if (err) throw err
+ console.log(elem)
+})
+
+})
+</script>
+<video id="YTAPI" name="YTAPI" class="video-js" autoplay controls preload="none" width="640" height="360" data-setup="{}">
+</video>
+<script src="http://vjs.zencdn.net/5.4.4/video.js"></script>
+</body></html>
