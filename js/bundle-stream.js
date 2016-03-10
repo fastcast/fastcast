@@ -9,7 +9,7 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
-global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
+global.WEBTORRENT_ANNOUNCE = [ 'wss://tracker.fastcast.nz' ]
 
 http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
   var data = [] // List of Buffer objects

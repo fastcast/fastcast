@@ -5,7 +5,7 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
-global.WEBTORRENT_ANNOUNCE = [ 'ws://tracker.fastcast.nz' ]
+global.WEBTORRENT_ANNOUNCE = [ 'wss://tracker.fastcast.nz' ]
 
 if (!Peer.WEBRTC_SUPPORT) {
   util.error('Sorry, your browser is unsupported. Please try again using Chrome.')
