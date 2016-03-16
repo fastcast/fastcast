@@ -38,17 +38,12 @@ http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
         var progress = (100 * torrent.progress).toFixed(1)
         util.updateSpeed(
           '<b>Peers:</b> ' + torrent.swarm.wires.length + ' ' +
-          '<b>Progress:</b> ' + progress + '% ' +
-          '<b>Download speed:</b> ' + prettyBytes(window.client.downloadSpeed) + '/s ' +
-          '<b>Upload speed:</b> ' + prettyBytes(window.client.uploadSpeed) + '/s'
+          '<b>Progress:</b> ' + progress + '% '
         )
         progressBar.setAttribute('aria-valuenow', progress)
         progressBar.setAttribute('style', 'width: ' + progress + '%')
       }
 
-      torrent.on('download', throttle(updateSpeed, 250))
-      torrent.on('upload', throttle(updateSpeed, 250))
-      setInterval(updateSpeed, 5000)
       updateSpeed()
 
       torrent.files.forEach(function (file) {
