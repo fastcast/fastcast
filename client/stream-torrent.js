@@ -7,8 +7,6 @@ var WebTorrent = require('webtorrent')
 
 var util = require('./util')
 
-global.WEBTORRENT_ANNOUNCE = [ 'wss://tracker.fastcast.nz' ]
-
 http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
   var data = [] // List of Buffer objects
 
@@ -38,14 +36,18 @@ http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
         var progress = (100 * torrent.progress).toFixed(1)
         util.updateSpeed(
           '<b>Peers:</b> ' + torrent.swarm.wires.length + ' ' +
-          '<b>Progress:</b> ' + progress + '% '
+          '<b>Progress:</b> ' + progress + '% ' +
+          '<b>Download speed:</b> ' + prettyBytes(window.client.downloadSpeed) + '/s ' +
+          '<b>Upload speed:</b> ' + prettyBytes(window.client.uploadSpeed) + '/s'
         )
         progressBar.setAttribute('aria-valuenow', progress)
         progressBar.setAttribute('style', 'width: ' + progress + '%')
       }
 
+      torrent.on('download', throttle(updateSpeed, 250))
+      torrent.on('upload', throttle(updateSpeed, 250))
+      setInterval(updateSpeed, 5000)
       updateSpeed()
-      setInterval(updateSpeed, 500)
 
       torrent.files.forEach(function (file) {
         // Create a video element

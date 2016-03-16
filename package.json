@@ -28,12 +28,13 @@
   },
   "homepage": "http://fastcast.nz",
   "dependencies": {
-    "drag-drop": "^2.3.0",
-    "parse-torrent": "^5.4.0",
-    "pretty-bytes": "^3.0.0",
+    "drag-drop": "^2.11.0",
+    "parse-torrent": "^5.7.3",
+    "pretty-bytes": "^3.0.1",
     "simple-peer": "^6.0.2",
-    "stream-http": "^2.0.0",
-    "typedarray-to-buffer": "^3.0.4",
+    "stream-http": "^2.2.0",
+    "throttleit": "^1.0.0",
+    "typedarray-to-buffer": "^3.1.2",
     "upload-element": "^1.0.1",
     "webtorrent": "0.x"
   },
