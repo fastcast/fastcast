@@ -43,6 +43,7 @@ http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
       }
 
       updateSpeed()
+      setInterval(updateSpeed, 500)
 
       torrent.files.forEach(function (file) {
         // Create a video element
