@@ -28,11 +28,11 @@
   },
   "homepage": "http://fastcast.nz",
   "dependencies": {
-    "drag-drop": "^2.11.0",
-    "parse-torrent": "^5.7.3",
-    "pretty-bytes": "^3.0.1",
-    "simple-peer": "^6.0.2",
-    "stream-http": "^2.2.0",
+    "drag-drop": "^2.12.1",
+    "parse-torrent": "^5.8.1",
+    "pretty-bytes": "^4.0.2",
+    "simple-peer": "^6.0.7",
+    "stream-http": "^2.4.1",
     "throttleit": "^1.0.0",
     "typedarray-to-buffer": "^3.1.2",
     "upload-element": "^1.0.1",
@@ -40,8 +40,8 @@
   },
   "devDependencies": {
     "bootlint": "^0.14.2",
-    "browserify": "^13.0.0",
+    "browserify": "^13.1.1",
     "recess": "^1.1.9",
-    "standard": "^6.0.8"
+    "standard": "^8.5.0"
   }
 }
