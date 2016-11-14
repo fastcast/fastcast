@@ -37,7 +37,7 @@ http.get('https://fastcast.nz/torrents/' + torrentName, function (res) {
       function updateSpeed () {
         var progress = (100 * torrent.progress).toFixed(1)
         util.updateSpeed(
-          '<b>Peers:</b> ' + torrent.swarm.wires.length + ' ' +
+          '<b>Peers:</b> ' + torrent.wires.length + ' ' +
           '<b>Progress:</b> ' + progress + '% '
         )
         progressBar.setAttribute('aria-valuenow', progress)
