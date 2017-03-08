@@ -147,6 +147,47 @@ module.exports.reset = function reset () {
 },{}],4:[function(require,module,exports){
 (function (Buffer){
 /**
+ * replaces parseInt(buffer.toString('ascii', start, end)).
+ * For strings with less then ~30 charachters, this is actually a lot faster.
+ *
+ * @param {Buffer} data
+ * @param {Number} start
+ * @param {Number} end
+ * @return {Number} calculated number
+ */
+function getIntFromBuffer (buffer, start, end) {
+  var sum = 0
+  var sign = 1
+
+  for (var i = start; i < end; i++) {
+    var num = buffer[i]
+
+    if (num < 58 && num >= 48) {
+      sum = sum * 10 + (num - 48)
+      continue
+    }
+
+    if (i === start && num === 43) { // +
+      continue
+    }
+
+    if (i === start && num === 45) { // -
+      sign = -1
+      continue
+    }
+
+    if (num === 46) { // .
+      // its a float. break here.
+      break
+    }
+
+    throw new Error('not a number: buffer[' + i + '] = ' + num)
+  }
+
+  return sum * sign
+}
+
+/**
  * Decodes bencoded data.
  *
  * @param  {Buffer} data
@@ -156,6 +197,10 @@ module.exports.reset = function reset () {
  * @return {Object|Array|Buffer|String|Number}
  */
 function decode (data, start, end, encoding) {
+  if (data == null || data.length === 0) {
+    return null
+  }
+
   if (typeof start !== 'number' && encoding == null) {
     encoding = start
     start = undefined
@@ -243,16 +288,16 @@ decode.list = function () {
 
 decode.integer = function () {
   var end = decode.find(0x65)
-  var number = decode.data.toString('ascii', decode.position + 1, end)
+  var number = getIntFromBuffer(decode.data, decode.position + 1, end)
 
   decode.position += end + 1 - decode.position
 
-  return parseInt(number, 10)
+  return number
 }
 
 decode.buffer = function () {
   var sep = decode.find(0x3A)
-  var length = parseInt(decode.data.toString('ascii', decode.position, sep), 10)
+  var length = getIntFromBuffer(decode.data, decode.position, sep)
   var end = ++sep + length
 
   decode.position = end
@@ -298,6 +343,8 @@ encode._encode = function (buffers, data) {
     buffers.push(data)
     return
   }
+
+  if (data == null) { return }
 
   switch (typeof data) {
     case 'string':
@@ -354,6 +401,7 @@ encode.dict = function (buffers, data) {
 
   for (; j < kl; j++) {
     k = keys[j]
+    if (data[k] == null) continue
     encode.buffer(buffers, k)
     encode._encode(buffers, data[k])
   }
@@ -367,6 +415,7 @@ encode.list = function (buffers, data) {
   buffers.push(buffL)
 
   for (; i < c; i++) {
+    if (data[i] == null) continue
     encode._encode(buffers, data[i])
   }
 
@@ -505,6 +554,7 @@ if(typeof module !== "undefined") module.exports = BitField;
 },{"buffer":115}],9:[function(require,module,exports){
 module.exports = Wire
 
+var arrayRemove = require('unordered-array-remove')
 var bencode = require('bencode')
 var BitField = require('bitfield')
 var Buffer = require('safe-buffer').Buffer
@@ -757,7 +807,9 @@ Wire.prototype.choke = function () {
   if (this.amChoking) return
   this.amChoking = true
   this._debug('choke')
-  this.peerRequests.splice(0, this.peerRequests.length)
+  while (this.peerRequests.length) {
+    this.peerRequests.pop()
+  }
   this._push(MESSAGE_CHOKE)
 }
 
@@ -901,12 +953,12 @@ Wire.prototype._read = function () {}
  */
 Wire.prototype._message = function (id, numbers, data) {
   var dataLength = data ? data.length : 0
-  var buffer = Buffer.allocUnsafe(5 + 4 * numbers.length)
+  var buffer = Buffer.allocUnsafe(5 + (4 * numbers.length))
 
   buffer.writeUInt32BE(buffer.length + dataLength - 4, 0)
   buffer[4] = id
   for (var i = 0; i < numbers.length; i++) {
-    buffer.writeUInt32BE(numbers[i], 5 + 4 * i)
+    buffer.writeUInt32BE(numbers[i], 5 + (4 * i))
   }
 
   this._push(buffer)
@@ -956,7 +1008,7 @@ Wire.prototype._onChoke = function () {
   this._debug('got choke')
   this.emit('choke')
   while (this.requests.length) {
-    this._callback(this.requests.shift(), new Error('peer is choking'), null)
+    this._callback(this.requests.pop(), new Error('peer is choking'), null)
   }
 }
 
@@ -1220,9 +1272,11 @@ Wire.prototype._onFinish = function () {
 
   clearInterval(this._keepAliveInterval)
   this._parse(Number.MAX_VALUE, function () {})
-  this.peerRequests = []
+  while (this.peerRequests.length) {
+    this.peerRequests.pop()
+  }
   while (this.requests.length) {
-    this._callback(this.requests.shift(), new Error('wire was closed'), null)
+    this._callback(this.requests.pop(), new Error('wire was closed'), null)
   }
 }
 
@@ -1235,22 +1289,20 @@ Wire.prototype._debug = function () {
 function pull (requests, piece, offset, length) {
   for (var i = 0; i < requests.length; i++) {
     var req = requests[i]
-    if (req.piece !== piece || req.offset !== offset || req.length !== length) continue
-
-    if (i === 0) requests.shift()
-    else requests.splice(i, 1)
-
-    return req
+    if (req.piece === piece && req.offset === offset && req.length === length) {
+      arrayRemove(requests, i)
+      return req
+    }
   }
   return null
 }
 
-},{"bencode":6,"bitfield":8,"debug":22,"inherits":31,"randombytes":57,"readable-stream":65,"safe-buffer":71,"speedometer":77,"xtend":108}],10:[function(require,module,exports){
+},{"bencode":6,"bitfield":8,"debug":22,"inherits":31,"randombytes":57,"readable-stream":65,"safe-buffer":71,"speedometer":77,"unordered-array-remove":94,"xtend":108}],10:[function(require,module,exports){
 (function (process){
 module.exports = Client
 
 var Buffer = require('safe-buffer').Buffer
-var debug = require('debug')('bittorrent-tracker')
+var debug = require('debug')('bittorrent-tracker:client')
 var EventEmitter = require('events').EventEmitter
 var extend = require('xtend')
 var inherits = require('inherits')
@@ -1279,6 +1331,7 @@ inherits(Client, EventEmitter)
  * @param {number} opts.port                     torrent client listening port
  * @param {function} opts.getAnnounceOpts        callback to provide data to tracker
  * @param {number} opts.rtcConfig                RTCPeerConnection configuration object
+ * @param {number} opts.userAgent                User-Agent header for http requests
  * @param {number} opts.wrtc                     custom webrtc impl (useful in node.js)
  */
 function Client (opts) {
@@ -1292,7 +1345,6 @@ function Client (opts) {
   if (!opts.announce) throw new Error('Option `announce` is required')
   if (!process.browser && !opts.port) throw new Error('Option `port` is required')
 
-  // required
   self.peerId = typeof opts.peerId === 'string'
     ? opts.peerId
     : opts.peerId.toString('hex')
@@ -1305,38 +1357,34 @@ function Client (opts) {
   self._infoHashBuffer = Buffer.from(self.infoHash, 'hex')
   self._infoHashBinary = self._infoHashBuffer.toString('binary')
 
-  self._port = opts.port
+  debug('new client %s', self.infoHash)
 
   self.destroyed = false
 
-  self._rtcConfig = opts.rtcConfig
+  self._port = opts.port
   self._getAnnounceOpts = opts.getAnnounceOpts
-  self._wrtc = opts.wrtc
+  self._rtcConfig = opts.rtcConfig
+  self._userAgent = opts.userAgent
 
   // Support lazy 'wrtc' module initialization
   // See: https://github.com/feross/webtorrent-hybrid/issues/46
-  if (typeof self._wrtc === 'function') self._wrtc = self._wrtc()
+  self._wrtc = typeof opts.wrtc === 'function' ? opts.wrtc() : opts.wrtc
 
-  debug('new client %s', self.infoHash)
-
-  var webrtcSupport = self._wrtc !== false && (!!self._wrtc || Peer.WEBRTC_SUPPORT)
-
-  var announce = (typeof opts.announce === 'string')
+  var announce = typeof opts.announce === 'string'
     ? [ opts.announce ]
-    : opts.announce == null
-      ? []
-      : opts.announce
+    : opts.announce == null ? [] : opts.announce
 
+  // Remove trailing slash from trackers to catch duplicates
   announce = announce.map(function (announceUrl) {
     announceUrl = announceUrl.toString()
     if (announceUrl[announceUrl.length - 1] === '/') {
-      // remove trailing slash from trackers to catch duplicates
       announceUrl = announceUrl.substring(0, announceUrl.length - 1)
     }
     return announceUrl
   })
-
   announce = uniq(announce)
+
+  var webrtcSupport = self._wrtc !== false && (!!self._wrtc || Peer.WEBRTC_SUPPORT)
 
   self._trackers = announce
     .map(function (announceUrl) {
@@ -1618,6 +1666,10 @@ function WebSocketTracker (client, announceUrl, opts) {
   self.retries = 0
   self.reconnectTimer = null
 
+  // Simple boolean flag to track whether the socket has received data from
+  // the websocket server since the last time socket.send() was called.
+  self.expectingResponse = false
+
   self._openSocket()
 }
 
@@ -1640,8 +1692,8 @@ WebSocketTracker.prototype.announce = function (opts) {
   })
   if (self._trackerId) params.trackerid = self._trackerId
 
-  if (opts.event === 'stopped') {
-    // Don't include offers with 'stopped' event
+  if (opts.event === 'stopped' || opts.event === 'completed') {
+    // Don't include offers with 'stopped' or 'completed' event
     self._send(params)
   } else {
     // Limit the number of offers that are generated, since it can be slow
@@ -1688,18 +1740,6 @@ WebSocketTracker.prototype.destroy = function (cb) {
   clearInterval(self.interval)
   clearTimeout(self.reconnectTimer)
 
-  if (self.socket) {
-    self.socket.removeListener('connect', self._onSocketConnectBound)
-    self.socket.removeListener('data', self._onSocketDataBound)
-    self.socket.removeListener('close', self._onSocketCloseBound)
-    self.socket.removeListener('error', self._onSocketErrorBound)
-  }
-
-  self._onSocketConnectBound = null
-  self._onSocketErrorBound = null
-  self._onSocketDataBound = null
-  self._onSocketCloseBound = null
-
   // Destroy peers
   for (var peerId in self.peers) {
     var peer = self.peers[peerId]
@@ -1708,24 +1748,51 @@ WebSocketTracker.prototype.destroy = function (cb) {
   }
   self.peers = null
 
+  if (self.socket) {
+    self.socket.removeListener('connect', self._onSocketConnectBound)
+    self.socket.removeListener('data', self._onSocketDataBound)
+    self.socket.removeListener('close', self._onSocketCloseBound)
+    self.socket.removeListener('error', self._onSocketErrorBound)
+    self.socket = null
+  }
+
+  self._onSocketConnectBound = null
+  self._onSocketErrorBound = null
+  self._onSocketDataBound = null
+  self._onSocketCloseBound = null
+
   if (socketPool[self.announceUrl]) {
     socketPool[self.announceUrl].consumers -= 1
   }
 
-  if (socketPool[self.announceUrl].consumers === 0) {
-    delete socketPool[self.announceUrl]
+  // Other instances are using the socket, so there's nothing left to do here
+  if (socketPool[self.announceUrl].consumers > 0) return cb()
 
-    try {
-      self.socket.on('error', noop) // ignore all future errors
-      self.socket.destroy(cb)
-    } catch (err) {
-      cb(null)
+  var socket = socketPool[self.announceUrl]
+  delete socketPool[self.announceUrl]
+  socket.on('error', noop) // ignore all future errors
+  socket.once('close', cb)
+
+  // If there is no data response expected, destroy immediately.
+  if (!self.expectingResponse) return destroyCleanup()
+
+  // Otherwise, wait a short time for potential responses to come in from the
+  // server, then force close the socket.
+  var timeout = setTimeout(destroyCleanup, common.DESTROY_TIMEOUT)
+
+  // But, if a response comes from the server before the timeout fires, do cleanup
+  // right away.
+  socket.once('data', destroyCleanup)
+
+  function destroyCleanup () {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
     }
-  } else {
-    cb(null)
+    socket.removeListener('data', destroyCleanup)
+    socket.destroy()
+    socket = null
   }
-
-  self.socket = null
 }
 
 WebSocketTracker.prototype._openSocket = function () {
@@ -1775,6 +1842,8 @@ WebSocketTracker.prototype._onSocketConnect = function () {
 WebSocketTracker.prototype._onSocketData = function (data) {
   var self = this
   if (self.destroyed) return
+
+  self.expectingResponse = false
 
   try {
     data = JSON.parse(data)
@@ -1936,7 +2005,7 @@ WebSocketTracker.prototype._startReconnectTimer = function () {
 WebSocketTracker.prototype._send = function (params) {
   var self = this
   if (self.destroyed) return
-
+  self.expectingResponse = true
   var message = JSON.stringify(params)
   debug('send %s', message)
   self.socket.send(message)
@@ -2258,6 +2327,7 @@ module.exports = {
   "428": "Precondition Required",
   "429": "Too Many Requests",
   "431": "Request Header Fields Too Large",
+  "451": "Unavailable For Legal Reasons",
   "500": "Internal Server Error",
   "501": "Not Implemented",
   "502": "Bad Gateway",
@@ -2324,25 +2394,23 @@ ChunkStoreWriteStream.prototype.destroy = function (err) {
 }
 
 },{"block-stream2":15,"inherits":31,"readable-stream":65}],19:[function(require,module,exports){
-module.exports = function(target, numbers) {
-  var closest = Infinity
-  var difference = 0
-  var winner = null
+var abs = Math.abs
 
-  numbers.sort(function(a, b) {
-    return a - b
-  })
+module.exports = closest
 
-  for (var i = 0, l = numbers.length; i < l; i++) {  
-    difference = Math.abs(target - numbers[i])
-    if (difference >= closest) {
-      break
-    }
-    closest = difference
-    winner = numbers[i]
+function closest (n, arr, rndx) {
+  var i, ndx, diff, best = Infinity
+  var low = 0, high = arr.length - 1
+  while (low <= high) {
+    i = low + (high - low >> 1)
+    diff = arr[i] - n
+    diff < 0 ? low = i + 1 :
+    diff > 0 ? high = i - 1 : void 0
+    diff = abs(diff)
+    if (diff < best) best = diff, ndx = i
+    if (arr[i] === n) break
   }
-
-  return winner
+  return rndx ? ndx : arr[ndx]
 }
 
 },{}],20:[function(require,module,exports){
@@ -2455,18 +2523,20 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
-}).call(this,{"isBuffer":require("../../../../../../usr/lib/node_modules/browserify/node_modules/is-buffer/index.js")})
-},{"../../../../../../usr/lib/node_modules/browserify/node_modules/is-buffer/index.js":122}],21:[function(require,module,exports){
+}).call(this,{"isBuffer":require("../../../../../../../usr/local/lib/node_modules/browserify/node_modules/is-buffer/index.js")})
+},{"../../../../../../../usr/local/lib/node_modules/browserify/node_modules/is-buffer/index.js":122}],21:[function(require,module,exports){
 (function (process,global,Buffer){
 module.exports = createTorrent
 module.exports.parseInput = parseInput
 
 module.exports.announceList = [
   [ 'udp://tracker.openbittorrent.com:80' ],
-  [ 'udp://tracker.internetwarriors.net:1337' ],
   [ 'udp://tracker.leechers-paradise.org:6969' ],
   [ 'udp://tracker.coppersurfer.tk:6969' ],
-  [ 'udp://exodus.desync.com:6969' ],
+  [ 'udp://tracker.opentrackr.org:1337' ],
+  [ 'udp://explodie.org:6969' ],
+  [ 'udp://zer0day.ch:1337' ],
+  [ 'udp://tracker.empire-js.us:1337' ],
   [ 'wss://tracker.btorrent.xyz' ],
   [ 'wss://tracker.openwebtorrent.com' ],
   [ 'wss://tracker.fastcast.nz' ]
@@ -2696,21 +2766,21 @@ function getFileInfo (path, cb) {
 }
 
 function traversePath (path, fn, cb) {
-  fs.readdir(path, function (err, entries) {
-    if (err && err.code === 'ENOTDIR') {
-      // this is a file
+  fs.stat(path, function (err, stats) {
+    if (err) return cb(err)
+    if (stats.isDirectory()) {
+      fs.readdir(path, function (err, entries) {
+        if (err) return cb(err)
+        parallel(entries.filter(notHidden).filter(junk.not).map(function (entry) {
+          return function (cb) {
+            traversePath(corePath.join(path, entry), fn, cb)
+          }
+        }), cb)
+      })
+    } else if (stats.isFile()) {
       fn(path, cb)
-    } else if (err) {
-      // real error
-      cb(err)
-    } else {
-      // this is a folder
-      parallel(entries.filter(notHidden).filter(junk.not).map(function (entry) {
-        return function (cb) {
-          traversePath(corePath.join(path, entry), fn, cb)
-        }
-      }), cb)
     }
+    // Ignore other types (not a file or directory)
   })
 }
 
@@ -2952,7 +3022,7 @@ function getStreamStream (readable, file) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
 },{"_process":126,"bencode":6,"block-stream2":15,"buffer":115,"filestream/read":27,"flatten":28,"fs":111,"is-file":33,"junk":36,"multistream":47,"once":49,"path":124,"piece-length":52,"readable-stream":65,"run-parallel":69,"simple-sha1":75,"xtend":108}],22:[function(require,module,exports){
-
+(function (process){
 /**
  * This is the web browser implementation of `debug()`.
  *
@@ -2992,13 +3062,23 @@ exports.colors = [
  */
 
 function useColors() {
+  // NB: In an Electron preload script, document will be defined but not fully
+  // initialized. Since we know we're in Chrome, we'll just detect this case
+  // explicitly
+  if (typeof window !== 'undefined' && window && typeof window.process !== 'undefined' && window.process.type === 'renderer') {
+    return true;
+  }
+
   // is webkit? http://stackoverflow.com/a/16459606/376773
-  return ('WebkitAppearance' in document.documentElement.style) ||
+  // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
+  return (typeof document !== 'undefined' && document && 'WebkitAppearance' in document.documentElement.style) ||
     // is firebug? http://stackoverflow.com/a/398120/376773
-    (window.console && (console.firebug || (console.exception && console.table))) ||
+    (typeof window !== 'undefined' && window && window.console && (console.firebug || (console.exception && console.table))) ||
     // is firefox >= v31?
     // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-    (navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31);
+    (typeof navigator !== 'undefined' && navigator && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
+    // double check webkit in userAgent just in case we are in a worker
+    (typeof navigator !== 'undefined' && navigator && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
 }
 
 /**
@@ -3006,7 +3086,11 @@ function useColors() {
  */
 
 exports.formatters.j = function(v) {
-  return JSON.stringify(v);
+  try {
+    return JSON.stringify(v);
+  } catch (err) {
+    return '[UnexpectedJSONParseError]: ' + err.message;
+  }
 };
 
 
@@ -3016,8 +3100,7 @@ exports.formatters.j = function(v) {
  * @api public
  */
 
-function formatArgs() {
-  var args = arguments;
+function formatArgs(args) {
   var useColors = this.useColors;
 
   args[0] = (useColors ? '%c' : '')
@@ -3027,17 +3110,17 @@ function formatArgs() {
     + (useColors ? '%c ' : ' ')
     + '+' + exports.humanize(this.diff);
 
-  if (!useColors) return args;
+  if (!useColors) return;
 
   var c = 'color: ' + this.color;
-  args = [args[0], c, 'color: inherit'].concat(Array.prototype.slice.call(args, 1));
+  args.splice(1, 0, c, 'color: inherit')
 
   // the final "%c" is somewhat tricky, because there could be other
   // arguments passed either before or after the %c, so we need to
   // figure out the correct index to insert the CSS into
   var index = 0;
   var lastC = 0;
-  args[0].replace(/%[a-z%]/g, function(match) {
+  args[0].replace(/%[a-zA-Z%]/g, function(match) {
     if ('%%' === match) return;
     index++;
     if ('%c' === match) {
@@ -3048,7 +3131,6 @@ function formatArgs() {
   });
 
   args.splice(lastC, 0, c);
-  return args;
 }
 
 /**
@@ -3091,11 +3173,14 @@ function save(namespaces) {
  */
 
 function load() {
-  var r;
   try {
-    r = exports.storage.debug;
+    return exports.storage.debug;
   } catch(e) {}
-  return r;
+
+  // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
+  if (typeof process !== 'undefined' && 'env' in process) {
+    return process.env.DEBUG;
+  }
 }
 
 /**
@@ -3115,13 +3200,14 @@ exports.enable(load());
  * @api private
  */
 
-function localstorage(){
+function localstorage() {
   try {
     return window.localStorage;
   } catch (e) {}
 }
 
-},{"./debug":23}],23:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"./debug":23,"_process":126}],23:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -3130,7 +3216,7 @@ function localstorage(){
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = debug;
+exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
 exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
@@ -3147,16 +3233,10 @@ exports.skips = [];
 /**
  * Map of special "%n" handling functions, for the debug "format" argument.
  *
- * Valid key names are a single, lowercased letter, i.e. "n".
+ * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
  */
 
 exports.formatters = {};
-
-/**
- * Previously assigned color.
- */
-
-var prevColor = 0;
 
 /**
  * Previous log timestamp.
@@ -3166,13 +3246,20 @@ var prevTime;
 
 /**
  * Select a color.
- *
+ * @param {String} namespace
  * @return {Number}
  * @api private
  */
 
-function selectColor() {
-  return exports.colors[prevColor++ % exports.colors.length];
+function selectColor(namespace) {
+  var hash = 0, i;
+
+  for (i in namespace) {
+    hash  = ((hash << 5) - hash) + namespace.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+
+  return exports.colors[Math.abs(hash) % exports.colors.length];
 }
 
 /**
@@ -3183,17 +3270,13 @@ function selectColor() {
  * @api public
  */
 
-function debug(namespace) {
+function createDebug(namespace) {
 
-  // define the `disabled` version
-  function disabled() {
-  }
-  disabled.enabled = false;
+  function debug() {
+    // disabled?
+    if (!debug.enabled) return;
 
-  // define the `enabled` version
-  function enabled() {
-
-    var self = enabled;
+    var self = debug;
 
     // set `diff` timestamp
     var curr = +new Date();
@@ -3203,22 +3286,22 @@ function debug(namespace) {
     self.curr = curr;
     prevTime = curr;
 
-    // add the `color` if not set
-    if (null == self.useColors) self.useColors = exports.useColors();
-    if (null == self.color && self.useColors) self.color = selectColor();
-
-    var args = Array.prototype.slice.call(arguments);
+    // turn the `arguments` into a proper Array
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
 
     args[0] = exports.coerce(args[0]);
 
     if ('string' !== typeof args[0]) {
-      // anything else let's inspect with %o
-      args = ['%o'].concat(args);
+      // anything else let's inspect with %O
+      args.unshift('%O');
     }
 
     // apply any `formatters` transformations
     var index = 0;
-    args[0] = args[0].replace(/%([a-z%])/g, function(match, format) {
+    args[0] = args[0].replace(/%([a-zA-Z%])/g, function(match, format) {
       // if we encounter an escaped % then don't increase the array index
       if (match === '%%') return match;
       index++;
@@ -3234,19 +3317,24 @@ function debug(namespace) {
       return match;
     });
 
-    if ('function' === typeof exports.formatArgs) {
-      args = exports.formatArgs.apply(self, args);
-    }
-    var logFn = enabled.log || exports.log || console.log.bind(console);
+    // apply env-specific formatting (colors, etc.)
+    exports.formatArgs.call(self, args);
+
+    var logFn = debug.log || exports.log || console.log.bind(console);
     logFn.apply(self, args);
   }
-  enabled.enabled = true;
 
-  var fn = exports.enabled(namespace) ? enabled : disabled;
+  debug.namespace = namespace;
+  debug.enabled = exports.enabled(namespace);
+  debug.useColors = exports.useColors();
+  debug.color = selectColor(namespace);
 
-  fn.namespace = namespace;
+  // env-specific initialization logic for debug instances
+  if ('function' === typeof exports.init) {
+    exports.init(debug);
+  }
 
-  return fn;
+  return debug;
 }
 
 /**
@@ -3259,6 +3347,9 @@ function debug(namespace) {
 
 function enable(namespaces) {
   exports.save(namespaces);
+
+  exports.names = [];
+  exports.skips = [];
 
   var split = (namespaces || '').split(/[\s,]+/);
   var len = split.length;
@@ -3811,6 +3902,9 @@ function magnetURIDecode (uri) {
 
     // Return keywords as an array
     if (key === 'kt') val = decodeURIComponent(val).split('+')
+
+    // Cast file index (ix) to a number
+    if (key === 'ix') val = Number(val)
 
     // If there are repeated parameters, return an array of values
     if (result[key]) {
@@ -5554,7 +5648,7 @@ Decoder.prototype._readBox = function () {
   function bufferHeaders (len, buf) {
     self._buffer(len, function (additionalBuf) {
       if (buf) {
-        buf = Buffer.concat(buf, additionalBuf)
+        buf = Buffer.concat([buf, additionalBuf])
       } else {
         buf = additionalBuf
       }
@@ -5778,11 +5872,11 @@ exports.encode = require('./encode')
  * Helpers.
  */
 
-var s = 1000;
-var m = s * 60;
-var h = m * 60;
-var d = h * 24;
-var y = d * 365.25;
+var s = 1000
+var m = s * 60
+var h = m * 60
+var d = h * 24
+var y = d * 365.25
 
 /**
  * Parse or format the given `val`.
@@ -5793,17 +5887,23 @@ var y = d * 365.25;
  *
  * @param {String|Number} val
  * @param {Object} options
+ * @throws {Error} throw an error if val is not a non-empty string or a number
  * @return {String|Number}
  * @api public
  */
 
-module.exports = function(val, options){
-  options = options || {};
-  if ('string' == typeof val) return parse(val);
-  return options.long
-    ? long(val)
-    : short(val);
-};
+module.exports = function (val, options) {
+  options = options || {}
+  var type = typeof val
+  if (type === 'string' && val.length > 0) {
+    return parse(val)
+  } else if (type === 'number' && isNaN(val) === false) {
+    return options.long ?
+			fmtLong(val) :
+			fmtShort(val)
+  }
+  throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(val))
+}
 
 /**
  * Parse the given `str` and return milliseconds.
@@ -5814,47 +5914,53 @@ module.exports = function(val, options){
  */
 
 function parse(str) {
-  str = '' + str;
-  if (str.length > 10000) return;
-  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str);
-  if (!match) return;
-  var n = parseFloat(match[1]);
-  var type = (match[2] || 'ms').toLowerCase();
+  str = String(str)
+  if (str.length > 10000) {
+    return
+  }
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str)
+  if (!match) {
+    return
+  }
+  var n = parseFloat(match[1])
+  var type = (match[2] || 'ms').toLowerCase()
   switch (type) {
     case 'years':
     case 'year':
     case 'yrs':
     case 'yr':
     case 'y':
-      return n * y;
+      return n * y
     case 'days':
     case 'day':
     case 'd':
-      return n * d;
+      return n * d
     case 'hours':
     case 'hour':
     case 'hrs':
     case 'hr':
     case 'h':
-      return n * h;
+      return n * h
     case 'minutes':
     case 'minute':
     case 'mins':
     case 'min':
     case 'm':
-      return n * m;
+      return n * m
     case 'seconds':
     case 'second':
     case 'secs':
     case 'sec':
     case 's':
-      return n * s;
+      return n * s
     case 'milliseconds':
     case 'millisecond':
     case 'msecs':
     case 'msec':
     case 'ms':
-      return n;
+      return n
+    default:
+      return undefined
   }
 }
 
@@ -5866,12 +5972,20 @@ function parse(str) {
  * @api private
  */
 
-function short(ms) {
-  if (ms >= d) return Math.round(ms / d) + 'd';
-  if (ms >= h) return Math.round(ms / h) + 'h';
-  if (ms >= m) return Math.round(ms / m) + 'm';
-  if (ms >= s) return Math.round(ms / s) + 's';
-  return ms + 'ms';
+function fmtShort(ms) {
+  if (ms >= d) {
+    return Math.round(ms / d) + 'd'
+  }
+  if (ms >= h) {
+    return Math.round(ms / h) + 'h'
+  }
+  if (ms >= m) {
+    return Math.round(ms / m) + 'm'
+  }
+  if (ms >= s) {
+    return Math.round(ms / s) + 's'
+  }
+  return ms + 'ms'
 }
 
 /**
@@ -5882,12 +5996,12 @@ function short(ms) {
  * @api private
  */
 
-function long(ms) {
-  return plural(ms, d, 'day')
-    || plural(ms, h, 'hour')
-    || plural(ms, m, 'minute')
-    || plural(ms, s, 'second')
-    || ms + ' ms';
+function fmtLong(ms) {
+  return plural(ms, d, 'day') ||
+    plural(ms, h, 'hour') ||
+    plural(ms, m, 'minute') ||
+    plural(ms, s, 'second') ||
+    ms + ' ms'
 }
 
 /**
@@ -5895,9 +6009,13 @@ function long(ms) {
  */
 
 function plural(ms, n, name) {
-  if (ms < n) return;
-  if (ms < n * 1.5) return Math.floor(ms / n) + ' ' + name;
-  return Math.ceil(ms / n) + ' ' + name + 's';
+  if (ms < n) {
+    return
+  }
+  if (ms < n * 1.5) {
+    return Math.floor(ms / n) + ' ' + name
+  }
+  return Math.ceil(ms / n) + ' ' + name + 's'
 }
 
 },{}],47:[function(require,module,exports){
@@ -6328,6 +6446,7 @@ function parseTorrentRemote (torrentId, cb) {
     // http, or https url to torrent file
     get.concat({
       url: torrentId,
+      timeout: 30 * 1000,
       headers: { 'user-agent': 'WebTorrent (http://webtorrent.io)' }
     }, function (err, res, torrentBuf) {
       if (err) return cb(new Error('Error downloading torrent: ' + err.message))
@@ -6367,22 +6486,19 @@ function isBlob (obj) {
 
 // Workaround Browserify v13 bug
 // https://github.com/substack/node-browserify/issues/1483
-;(function () { Buffer(0) })()
+;(function () { Buffer.alloc(0) })()
 
 }).call(this,require('_process'),require("buffer").Buffer)
 },{"_process":126,"blob-to-buffer":14,"buffer":115,"fs":111,"magnet-uri":37,"parse-torrent-file":50,"simple-get":73}],52:[function(require,module,exports){
 var closest = require('closest-to')
+var kB = Math.pow(2, 10)
 
 // Create a range from 16kb–4mb
-var sizes = []
-for (var i = 14; i <= 22; i++) {
-  sizes.push(Math.pow(2, i))
-}
+var p = 13, range = []
+while (p++ < 22) range.push(Math.pow(2, p))
 
-module.exports = function(size) {
-  return closest(
-    size / Math.pow(2, 10), sizes 
-  )
+module.exports = function (bytes) {
+  return closest(bytes / kB, range)
 }
 
 },{"closest-to":19}],53:[function(require,module,exports){
@@ -6470,6 +6586,7 @@ var isFn = function (fn) {
 }
 
 var isFS = function (stream) {
+  if (!fs) return false // browser
   return (stream instanceof (fs.ReadStream || noop) || stream instanceof (fs.WriteStream || noop)) && isFn(stream.close)
 }
 
@@ -6539,7 +6656,7 @@ var pump = function () {
 
 module.exports = pump
 
-},{"end-of-stream":25,"fs":111,"once":49}],56:[function(require,module,exports){
+},{"end-of-stream":25,"fs":113,"once":49}],56:[function(require,module,exports){
 var iterate = function (list) {
   var offset = 0
   return function () {
@@ -6617,10 +6734,10 @@ module.exports = RangeSliceStream
 
 inherits(RangeSliceStream, stream.Writable)
 
-function RangeSliceStream (offset) {
+function RangeSliceStream (offset, opts) {
 	var self = this
 	if (!(self instanceof RangeSliceStream)) return new RangeSliceStream(offset)
-	stream.Writable.call(self)
+	stream.Writable.call(self, opts)
 
 	self.destroyed = false
 	self._queue = []
@@ -6844,6 +6961,10 @@ var processNextTick = require('process-nextick-args');
 var isArray = require('isarray');
 /*</replacement>*/
 
+/*<replacement>*/
+var Duplex;
+/*</replacement>*/
+
 Readable.ReadableState = ReadableState;
 
 /*<replacement>*/
@@ -6891,6 +7012,8 @@ var StringDecoder;
 util.inherits(Readable, Stream);
 
 function prependListener(emitter, event, fn) {
+  // Sadly this is not cacheable as some libraries bundle their own
+  // event emitter implementation with them.
   if (typeof emitter.prependListener === 'function') {
     return emitter.prependListener(event, fn);
   } else {
@@ -6902,7 +7025,6 @@ function prependListener(emitter, event, fn) {
   }
 }
 
-var Duplex;
 function ReadableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -6972,7 +7094,6 @@ function ReadableState(options, stream) {
   }
 }
 
-var Duplex;
 function Readable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -7295,7 +7416,7 @@ function maybeReadMore_(stream, state) {
 // for virtual (non-string, non-buffer) streams, "length" is somewhat
 // arbitrary, and perhaps not very meaningful.
 Readable.prototype._read = function (n) {
-  this.emit('error', new Error('not implemented'));
+  this.emit('error', new Error('_read() is not implemented'));
 };
 
 Readable.prototype.pipe = function (dest, pipeOpts) {
@@ -7473,16 +7594,16 @@ Readable.prototype.unpipe = function (dest) {
     state.pipesCount = 0;
     state.flowing = false;
 
-    for (var _i = 0; _i < len; _i++) {
-      dests[_i].emit('unpipe', this);
+    for (var i = 0; i < len; i++) {
+      dests[i].emit('unpipe', this);
     }return this;
   }
 
   // try to find the right one.
-  var i = indexOf(state.pipes, dest);
-  if (i === -1) return this;
+  var index = indexOf(state.pipes, dest);
+  if (index === -1) return this;
 
-  state.pipes.splice(i, 1);
+  state.pipes.splice(index, 1);
   state.pipesCount -= 1;
   if (state.pipesCount === 1) state.pipes = state.pipes[0];
 
@@ -7867,7 +7988,6 @@ function Transform(options) {
 
   this._transformState = new TransformState(this);
 
-  // when the writable side finishes, then flush out anything remaining.
   var stream = this;
 
   // start out asking for a readable event once data is transformed.
@@ -7884,9 +8004,10 @@ function Transform(options) {
     if (typeof options.flush === 'function') this._flush = options.flush;
   }
 
+  // When the writable side finishes, then flush out anything remaining.
   this.once('prefinish', function () {
-    if (typeof this._flush === 'function') this._flush(function (er) {
-      done(stream, er);
+    if (typeof this._flush === 'function') this._flush(function (er, data) {
+      done(stream, er, data);
     });else done(stream);
   });
 }
@@ -7907,7 +8028,7 @@ Transform.prototype.push = function (chunk, encoding) {
 // an error, then that'll put the hurt on the whole operation.  If you
 // never call cb(), then you'll never get another chunk.
 Transform.prototype._transform = function (chunk, encoding, cb) {
-  throw new Error('Not implemented');
+  throw new Error('_transform() is not implemented');
 };
 
 Transform.prototype._write = function (chunk, encoding, cb) {
@@ -7937,8 +8058,10 @@ Transform.prototype._read = function (n) {
   }
 };
 
-function done(stream, er) {
+function done(stream, er, data) {
   if (er) return stream.emit('error', er);
+
+  if (data !== null && data !== undefined) stream.push(data);
 
   // if there's nothing in the write buffer, then that means
   // that nothing more will ever be provided
@@ -7967,6 +8090,10 @@ var processNextTick = require('process-nextick-args');
 
 /*<replacement>*/
 var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
+/*</replacement>*/
+
+/*<replacement>*/
+var Duplex;
 /*</replacement>*/
 
 Writable.WritableState = WritableState;
@@ -8009,7 +8136,6 @@ function WriteReq(chunk, encoding, cb) {
   this.next = null;
 }
 
-var Duplex;
 function WritableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -8031,6 +8157,7 @@ function WritableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
+  // drain event flag.
   this.needDrain = false;
   // at the start of calling end()
   this.ending = false;
@@ -8105,7 +8232,7 @@ function WritableState(options, stream) {
   this.corkedRequestsFree = new CorkedRequest(this);
 }
 
-WritableState.prototype.getBuffer = function writableStateGetBuffer() {
+WritableState.prototype.getBuffer = function getBuffer() {
   var current = this.bufferedRequest;
   var out = [];
   while (current) {
@@ -8125,13 +8252,37 @@ WritableState.prototype.getBuffer = function writableStateGetBuffer() {
   } catch (_) {}
 })();
 
-var Duplex;
+// Test _writableState for inheritance to account for Duplex streams,
+// whose prototype chain only points to Readable.
+var realHasInstance;
+if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.prototype[Symbol.hasInstance] === 'function') {
+  realHasInstance = Function.prototype[Symbol.hasInstance];
+  Object.defineProperty(Writable, Symbol.hasInstance, {
+    value: function (object) {
+      if (realHasInstance.call(this, object)) return true;
+
+      return object && object._writableState instanceof WritableState;
+    }
+  });
+} else {
+  realHasInstance = function (object) {
+    return object instanceof this;
+  };
+}
+
 function Writable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
-  // Writable ctor is applied to Duplexes, though they're not
-  // instanceof Writable, they're instanceof Readable.
-  if (!(this instanceof Writable) && !(this instanceof Duplex)) return new Writable(options);
+  // Writable ctor is applied to Duplexes, too.
+  // `realHasInstance` is necessary because using plain `instanceof`
+  // would return false, as no `_writableState` property is attached.
+
+  // Trying to use the custom `instanceof` for Writable here will also break the
+  // Node.js LazyTransform implementation, which has a non-trivial getter for
+  // `_writableState` that would lead to infinite recursion.
+  if (!realHasInstance.call(Writable, this) && !(this instanceof Duplex)) {
+    return new Writable(options);
+  }
 
   this._writableState = new WritableState(options, this);
 
@@ -8391,7 +8542,7 @@ function clearBuffer(stream, state) {
 }
 
 Writable.prototype._write = function (chunk, encoding, cb) {
-  cb(new Error('not implemented'));
+  cb(new Error('_write() is not implemented'));
 };
 
 Writable.prototype._writev = null;
@@ -8928,7 +9079,7 @@ module.exports={
   ".bz2": "application/x-bzip2",
   ".conf": "text/plain",
   ".css": "text/css",
-  ".csv": "text/csv",
+  ".csv": "text/plain",
   ".diff": "text/x-diff",
   ".doc": "application/msword",
   ".flv": "video/x-flv",
@@ -9180,7 +9331,19 @@ module.exports = function (tasks, cb) {
             return len;
         };
         var padZeroes = function (bin, len) {
-            for (var i$2 = len >> 2; i$2 < bin.length; i$2++)
+            var h8 = new Uint8Array(bin.buffer);
+            var om = len % 4, align = len - om;
+            switch (om) {
+            case 0:
+                h8[align + 3] = 0;
+            case 1:
+                h8[align + 2] = 0;
+            case 2:
+                h8[align + 1] = 0;
+            case 3:
+                h8[align + 0] = 0;
+            }
+            for (var i$2 = (len >> 2) + 1; i$2 < bin.length; i$2++)
                 bin[i$2] = 0;
         };
         var padData = function (bin, chunkLen, msgLen) {
@@ -9193,20 +9356,21 @@ module.exports = function (tasks, cb) {
         var // Convert a binary string and write it to the heap.
         // A binary string is expected to only contain char codes < 256.
         convStr = function (H8, H32, start, len, off) {
-            var str = this, i$2, om = off % 4, lm = len % 4, j = len - lm;
-            if (j > 0) {
-                switch (om) {
-                case 0:
-                    H8[off + 3 | 0] = str.charCodeAt(start);
-                case 1:
-                    H8[off + 2 | 0] = str.charCodeAt(start + 1);
-                case 2:
-                    H8[off + 1 | 0] = str.charCodeAt(start + 2);
-                case 3:
-                    H8[off | 0] = str.charCodeAt(start + 3);
-                }
+            var str = this, i$2, om = off % 4, lm = (len + om) % 4, j = len - lm;
+            switch (om) {
+            case 0:
+                H8[off] = str.charCodeAt(start + 3);
+            case 1:
+                H8[off + 1 - (om << 1) | 0] = str.charCodeAt(start + 2);
+            case 2:
+                H8[off + 2 - (om << 1) | 0] = str.charCodeAt(start + 1);
+            case 3:
+                H8[off + 3 - (om << 1) | 0] = str.charCodeAt(start);
             }
-            for (i$2 = om; i$2 < j; i$2 = i$2 + 4 | 0) {
+            if (len < lm + om) {
+                return;
+            }
+            for (i$2 = 4 - om; i$2 < j; i$2 = i$2 + 4 | 0) {
                 H32[off + i$2 >> 2] = str.charCodeAt(start + i$2) << 24 | str.charCodeAt(start + i$2 + 1) << 16 | str.charCodeAt(start + i$2 + 2) << 8 | str.charCodeAt(start + i$2 + 3);
             }
             switch (lm) {
@@ -9221,21 +9385,22 @@ module.exports = function (tasks, cb) {
         var // Convert a buffer or array and write it to the heap.
         // The buffer or array is expected to only contain elements < 256.
         convBuf = function (H8, H32, start, len, off) {
-            var buf = this, i$2, om = off % 4, lm = len % 4, j = len - lm;
-            if (j > 0) {
-                switch (om) {
-                case 0:
-                    H8[off + 3 | 0] = buf[start];
-                case 1:
-                    H8[off + 2 | 0] = buf[start + 1];
-                case 2:
-                    H8[off + 1 | 0] = buf[start + 2];
-                case 3:
-                    H8[off | 0] = buf[start + 3];
-                }
+            var buf = this, i$2, om = off % 4, lm = (len + om) % 4, j = len - lm;
+            switch (om) {
+            case 0:
+                H8[off] = buf[start + 3];
+            case 1:
+                H8[off + 1 - (om << 1) | 0] = buf[start + 2];
+            case 2:
+                H8[off + 2 - (om << 1) | 0] = buf[start + 1];
+            case 3:
+                H8[off + 3 - (om << 1) | 0] = buf[start];
             }
-            for (i$2 = 4 - om; i$2 < j; i$2 = i$2 += 4 | 0) {
-                H32[off + i$2 >> 2] = buf[start + i$2] << 24 | buf[start + i$2 + 1] << 16 | buf[start + i$2 + 2] << 8 | buf[start + i$2 + 3];
+            if (len < lm + om) {
+                return;
+            }
+            for (i$2 = 4 - om; i$2 < j; i$2 = i$2 + 4 | 0) {
+                H32[off + i$2 >> 2 | 0] = buf[start + i$2] << 24 | buf[start + i$2 + 1] << 16 | buf[start + i$2 + 2] << 8 | buf[start + i$2 + 3];
             }
             switch (lm) {
             case 3:
@@ -9247,22 +9412,23 @@ module.exports = function (tasks, cb) {
             }
         };
         var convBlob = function (H8, H32, start, len, off) {
-            var blob = this, i$2, om = off % 4, lm = len % 4, j = len - lm;
+            var blob = this, i$2, om = off % 4, lm = (len + om) % 4, j = len - lm;
             var buf = new Uint8Array(reader.readAsArrayBuffer(blob.slice(start, start + len)));
-            if (j > 0) {
-                switch (om) {
-                case 0:
-                    H8[off + 3 | 0] = buf[0];
-                case 1:
-                    H8[off + 2 | 0] = buf[1];
-                case 2:
-                    H8[off + 1 | 0] = buf[2];
-                case 3:
-                    H8[off | 0] = buf[3];
-                }
+            switch (om) {
+            case 0:
+                H8[off] = buf[3];
+            case 1:
+                H8[off + 1 - (om << 1) | 0] = buf[2];
+            case 2:
+                H8[off + 2 - (om << 1) | 0] = buf[1];
+            case 3:
+                H8[off + 3 - (om << 1) | 0] = buf[0];
             }
-            for (i$2 = 4 - om; i$2 < j; i$2 = i$2 += 4 | 0) {
-                H32[off + i$2 >> 2] = buf[i$2] << 24 | buf[i$2 + 1] << 16 | buf[i$2 + 2] << 8 | buf[i$2 + 3];
+            if (len < lm + om) {
+                return;
+            }
+            for (i$2 = 4 - om; i$2 < j; i$2 = i$2 + 4 | 0) {
+                H32[off + i$2 >> 2 | 0] = buf[i$2] << 24 | buf[i$2 + 1] << 16 | buf[i$2 + 2] << 8 | buf[i$2 + 3];
             }
             switch (lm) {
             case 3:
@@ -9341,6 +9507,7 @@ module.exports = function (tasks, cb) {
             if (size % 64 > 0) {
                 throw new Error('Chunk size must be a multiple of 128 bit');
             }
+            self$2.offset = 0;
             self$2.maxChunkLen = size;
             self$2.padMaxChunkLen = padlen(size);
             // The size of the heap is the sum of:
@@ -9360,6 +9527,7 @@ module.exports = function (tasks, cb) {
         // to a chunk siyze.
         init(chunkSize || 64 * 1024);
         var initState = function (heap, padMsgLen) {
+            self$2.offset = 0;
             var io = new Int32Array(heap, padMsgLen + 320, 5);
             io[0] = 1732584193;
             io[1] = -271733879;
@@ -9375,17 +9543,17 @@ module.exports = function (tasks, cb) {
             return padChunkLen;
         };
         var // Write data to the heap.
-        write = function (data, chunkOffset, chunkLen) {
-            convFn(data)(self$2.h8, self$2.h32, chunkOffset, chunkLen, 0);
+        write = function (data, chunkOffset, chunkLen, off) {
+            convFn(data)(self$2.h8, self$2.h32, chunkOffset, chunkLen, off || 0);
         };
         var // Initialize and call the RushaCore,
         // assuming an input buffer of length len * 4.
         coreCall = function (data, chunkOffset, chunkLen, msgLen, finalize) {
             var padChunkLen = chunkLen;
+            write(data, chunkOffset, chunkLen);
             if (finalize) {
                 padChunkLen = padChunk(chunkLen, msgLen);
             }
-            write(data, chunkOffset, chunkLen);
             self$2.core.hash(padChunkLen, self$2.padMaxChunkLen);
         };
         var getRawDigest = function (heap, padMaxChunkLen) {
@@ -9414,6 +9582,64 @@ module.exports = function (tasks, cb) {
         // as a hex string.
         this.digest = this.digestFromString = this.digestFromBuffer = this.digestFromArrayBuffer = function (str) {
             return hex(rawDigest(str).buffer);
+        };
+        this.resetState = function () {
+            initState(self$2.heap, self$2.padMaxChunkLen);
+            return this;
+        };
+        this.append = function (chunk) {
+            var chunkOffset = 0;
+            var chunkLen = chunk.byteLength || chunk.length || chunk.size || 0;
+            var turnOffset = self$2.offset % self$2.maxChunkLen;
+            var inputLen;
+            self$2.offset += chunkLen;
+            while (chunkOffset < chunkLen) {
+                inputLen = Math.min(chunkLen - chunkOffset, self$2.maxChunkLen - turnOffset);
+                write(chunk, chunkOffset, inputLen, turnOffset);
+                turnOffset += inputLen;
+                chunkOffset += inputLen;
+                if (turnOffset === self$2.maxChunkLen) {
+                    self$2.core.hash(self$2.maxChunkLen, self$2.padMaxChunkLen);
+                    turnOffset = 0;
+                }
+            }
+            return this;
+        };
+        this.getState = function () {
+            var turnOffset = self$2.offset % self$2.maxChunkLen;
+            var heap;
+            if (!turnOffset) {
+                var io = new Int32Array(self$2.heap, self$2.padMaxChunkLen + 320, 5);
+                heap = io.buffer.slice(io.byteOffset, io.byteOffset + io.byteLength);
+            } else {
+                heap = self$2.heap.slice(0);
+            }
+            return {
+                offset: self$2.offset,
+                heap: heap
+            };
+        };
+        this.setState = function (state) {
+            self$2.offset = state.offset;
+            if (state.heap.byteLength === 20) {
+                var io = new Int32Array(self$2.heap, self$2.padMaxChunkLen + 320, 5);
+                io.set(new Int32Array(state.heap));
+            } else {
+                self$2.h32.set(new Int32Array(state.heap));
+            }
+            return this;
+        };
+        var rawEnd = this.rawEnd = function () {
+            var msgLen = self$2.offset;
+            var chunkLen = msgLen % self$2.maxChunkLen;
+            var padChunkLen = padChunk(chunkLen, msgLen);
+            self$2.core.hash(padChunkLen, self$2.padMaxChunkLen);
+            var result = getRawDigest(self$2.heap, self$2.padMaxChunkLen);
+            initState(self$2.heap, self$2.padMaxChunkLen);
+            return result;
+        };
+        this.end = function () {
+            return hex(rawEnd().buffer);
         };
     }
     ;
@@ -9616,6 +9842,10 @@ function simpleGet (opts, cb) {
     var tryUnzip = typeof unzipResponse === 'function' && opts.method !== 'HEAD'
     cb(null, tryUnzip ? unzipResponse(res) : res)
   })
+  req.on('timeout', function () {
+    req.abort()
+    cb(new Error('Request timed out'))
+  })
   req.on('error', cb)
   req.end(body)
   return req
@@ -9667,6 +9897,8 @@ var inherits = require('inherits')
 var randombytes = require('randombytes')
 var stream = require('readable-stream')
 
+var MAX_BUFFERED_AMOUNT = 64 * 1024
+
 inherits(Peer, stream.Duplex)
 
 /**
@@ -9678,24 +9910,28 @@ function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
 
+  self._id = randombytes(4).toString('hex').slice(0, 7)
+  self._debug('new peer %o', opts)
+
+  opts = Object.assign({
+    allowHalfOpen: false
+  }, opts)
+
+  stream.Duplex.call(self, opts)
+
   self.channelName = opts.initiator
     ? opts.channelName || randombytes(20).toString('hex')
     : null
 
-  self._debug('new peer %o', opts)
-
-  if (!opts) opts = {}
-  opts.allowHalfOpen = false
-  if (opts.highWaterMark == null) opts.highWaterMark = 1024 * 1024
-
-  stream.Duplex.call(self, opts)
+  // Needed by _transformConstraints, so set this early
+  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
-  self.constraints = opts.constraints || Peer.constraints
-  self.offerConstraints = opts.offerConstraints || {}
-  self.answerConstraints = opts.answerConstraints || {}
+  self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
+  self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
+  self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
@@ -9704,17 +9940,16 @@ function Peer (opts) {
   self.destroyed = false
   self.connected = false
 
-  // so Peer object always has same shape (V8 optimization)
   self.remoteAddress = undefined
   self.remoteFamily = undefined
   self.remotePort = undefined
   self.localAddress = undefined
   self.localPort = undefined
 
-  self._isWrtc = !!opts.wrtc // HACK: to fix `wrtc` bug. See issue: #60
   self._wrtc = (opts.wrtc && typeof opts.wrtc === 'object')
     ? opts.wrtc
     : getBrowserRTC()
+
   if (!self._wrtc) {
     if (typeof window === 'undefined') {
       throw new Error('No WebRTC support: Specify `opts.wrtc` option in this environment')
@@ -9723,12 +9958,12 @@ function Peer (opts) {
     }
   }
 
-  self._maxBufferedAmount = opts.highWaterMark
   self._pcReady = false
   self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._channel = null
   self._pendingCandidates = []
+  self._previousStreams = []
 
   self._chunk = null
   self._cb = null
@@ -9736,6 +9971,12 @@ function Peer (opts) {
   self._reconnectTimeout = null
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+
+  // We prefer feature detection whenever possible, but sometimes that's not
+  // possible for certain implementations.
+  self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
+  self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
+
   self._pc.oniceconnectionstatechange = function () {
     self._onIceConnectionStateChange()
   }
@@ -9746,61 +9987,49 @@ function Peer (opts) {
     self._onIceCandidate(event)
   }
 
-  if (self.stream) self._pc.addStream(self.stream)
-
-  if ('ontrack' in self._pc) {
-    // WebRTC Spec, Firefox
-    self._pc.ontrack = function (event) {
-      self._onTrack(event)
-    }
-  } else {
-    // Chrome, etc. This can be removed once all browsers support `ontrack`
-    self._pc.onaddstream = function (event) {
-      self._onAddStream(event)
-    }
-  }
-
   if (self.initiator) {
-    self._setupData({
-      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
-    })
-
     var createdOffer = false
     self._pc.onnegotiationneeded = function () {
       if (!createdOffer) self._createOffer()
       createdOffer = true
     }
-    // Only Chrome triggers "negotiationneeded"; this is a workaround for other
-    // implementations
-    if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
-      self._pc.onnegotiationneeded()
-    }
+
+    self._setupData({
+      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
+    })
   } else {
     self._pc.ondatachannel = function (event) {
       self._setupData(event)
     }
   }
 
-  self.on('finish', function () {
-    if (self.connected) {
-      // When local peer is finished writing, close connection to remote peer.
-      // Half open connections are currently not supported.
-      // Wait a bit before destroying so the datachannel flushes.
-      // TODO: is there a more reliable way to accomplish this?
-      setTimeout(function () {
-        self._destroy()
-      }, 100)
-    } else {
-      // If data channel is not connected when local peer is finished writing, wait until
-      // data is flushed to network at "connect" event.
-      // TODO: is there a more reliable way to accomplish this?
-      self.once('connect', function () {
-        setTimeout(function () {
-          self._destroy()
-        }, 100)
+  if ('addTrack' in self._pc) {
+    // WebRTC Spec, Firefox
+    if (self.stream) {
+      self.stream.getTracks().forEach(function (track) {
+        self._pc.addTrack(track, self.stream)
       })
     }
-  })
+    self._pc.ontrack = function (event) {
+      self._onTrack(event)
+    }
+  } else {
+    // Chrome, etc. This can be removed once all browsers support `ontrack`
+    if (self.stream) self._pc.addStream(self.stream)
+    self._pc.onaddstream = function (event) {
+      self._onAddStream(event)
+    }
+  }
+
+  // HACK: wrtc doesn't fire the 'negotionneeded' event
+  if (self.initiator && self._isWrtc) {
+    self._pc.onnegotiationneeded()
+  }
+
+  self._onFinishBound = function () {
+    self._onFinish()
+  }
+  self.once('finish', self._onFinishBound)
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
@@ -9813,8 +10042,10 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 Peer.config = {
   iceServers: [
     {
-      url: 'stun:23.21.150.121', // deprecated, replaced by `urls`
-      urls: 'stun:23.21.150.121'
+      urls: 'stun:stun.l.google.com:19302'
+    },
+    {
+      urls: 'stun:global.stun.twilio.com:3478?transport=udp'
     }
   ]
 }
@@ -9845,33 +10076,37 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal()')
 
-  function addIceCandidate (candidate) {
-    try {
-      self._pc.addIceCandidate(
-        new self._wrtc.RTCIceCandidate(candidate),
-        noop,
-        function (err) { self._onError(err) }
-      )
-    } catch (err) {
-      self._destroy(new Error('error adding candidate: ' + err.message))
-    }
+  if (data.candidate) {
+    if (self._pc.remoteDescription) self._addIceCandidate(data.candidate)
+    else self._pendingCandidates.push(data.candidate)
   }
-
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
-      if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
 
-      self._pendingCandidates.forEach(addIceCandidate)
+      self._pendingCandidates.forEach(function (candidate) {
+        self._addIceCandidate(candidate)
+      })
       self._pendingCandidates = []
+
+      if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }, function (err) { self._onError(err) })
-  }
-  if (data.candidate) {
-    if (self._pc.remoteDescription) addIceCandidate(data.candidate)
-    else self._pendingCandidates.push(data.candidate)
   }
   if (!data.sdp && !data.candidate) {
     self._destroy(new Error('signal() called with invalid signal data'))
+  }
+}
+
+Peer.prototype._addIceCandidate = function (candidate) {
+  var self = this
+  try {
+    self._pc.addIceCandidate(
+      new self._wrtc.RTCIceCandidate(candidate),
+      noop,
+      function (err) { self._onError(err) }
+    )
+  } catch (err) {
+    self._destroy(new Error('error adding candidate: ' + err.message))
   }
 }
 
@@ -9882,14 +10117,13 @@ Peer.prototype.signal = function (data) {
 Peer.prototype.send = function (chunk) {
   var self = this
 
-  // HACK: `wrtc` module doesn't accept node.js buffer. See issue: #60
-  if (Buffer.isBuffer(chunk) && self._isWrtc) {
+  // HACK: `wrtc` module crashes on Node.js Buffer, so convert to Uint8Array
+  // See: https://github.com/feross/simple-peer/issues/60
+  if (self._isWrtc && Buffer.isBuffer(chunk)) {
     chunk = new Uint8Array(chunk)
   }
 
-  var len = chunk.length || chunk.byteLength || chunk.size
   self._channel.send(chunk)
-  self._debug('write: %d bytes', len)
 }
 
 Peer.prototype.destroy = function (onclose) {
@@ -9913,11 +10147,17 @@ Peer.prototype._destroy = function (err, onclose) {
   self.connected = false
   self._pcReady = false
   self._channelReady = false
+  self._previousStreams = null
 
-  self._chunk = null
-  self._cb = null
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
+  self._interval = null
+  self._reconnectTimeout = null
+  self._chunk = null
+  self._cb = null
+
+  if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
+  self._onFinishBound = null
 
   if (self._pc) {
     try {
@@ -9927,7 +10167,7 @@ Peer.prototype._destroy = function (err, onclose) {
     self._pc.oniceconnectionstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    if ('ontrack' in self._pc) {
+    if ('addTrack' in self._pc) {
       self._pc.ontrack = null
     } else {
       self._pc.onaddstream = null
@@ -9955,11 +10195,19 @@ Peer.prototype._destroy = function (err, onclose) {
 Peer.prototype._setupData = function (event) {
   var self = this
   self._channel = event.channel
+  self._channel.binaryType = 'arraybuffer'
+
+  if (typeof self._channel.bufferedAmountLowThreshold === 'number') {
+    self._channel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT
+  }
+
   self.channelName = self._channel.label
 
-  self._channel.binaryType = 'arraybuffer'
   self._channel.onmessage = function (event) {
     self._onChannelMessage(event)
+  }
+  self._channel.onbufferedamountlow = function () {
+    self._onChannelBufferedAmountLow()
   }
   self._channel.onopen = function () {
     self._onChannelOpen()
@@ -9981,7 +10229,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
     } catch (err) {
       return self._onError(err)
     }
-    if (self._channel.bufferedAmount > self._maxBufferedAmount) {
+    if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       self._cb = cb
     } else {
@@ -9991,6 +10239,27 @@ Peer.prototype._write = function (chunk, encoding, cb) {
     self._debug('write before connect')
     self._chunk = chunk
     self._cb = cb
+  }
+}
+
+// When stream finishes writing, close socket. Half open connections are not
+// supported.
+Peer.prototype._onFinish = function () {
+  var self = this
+  if (self.destroyed) return
+
+  if (self.connected) {
+    destroySoon()
+  } else {
+    self.once('connect', destroySoon)
+  }
+
+  // Wait a bit before destroying so the socket flushes.
+  // TODO: is there a more reliable way to accomplish this?
+  function destroySoon () {
+    setTimeout(function () {
+      self._destroy()
+    }, 100)
   }
 }
 
@@ -10023,7 +10292,10 @@ Peer.prototype._createAnswer = function () {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer, noop, function (err) { self._onError(err) })
-    var sendAnswer = function () {
+    if (self.trickle || self._iceComplete) sendAnswer()
+    else self.once('_iceComplete', sendAnswer)
+
+    function sendAnswer () {
       var signal = self._pc.localDescription || answer
       self._debug('signal')
       self.emit('signal', {
@@ -10031,8 +10303,6 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-    if (self.trickle || self._iceComplete) sendAnswer()
-    else self.once('_iceComplete', sendAnswer)
   }, function (err) { self._onError(err) }, self.answerConstraints)
 }
 
@@ -10060,7 +10330,7 @@ Peer.prototype._onIceConnectionStateChange = function () {
     }
   }
   if (iceConnectionState === 'failed') {
-    self._destroy()
+    self._destroy(new Error('Ice connection failed.'))
   }
   if (iceConnectionState === 'closed') {
     self._destroy()
@@ -10069,31 +10339,48 @@ Peer.prototype._onIceConnectionStateChange = function () {
 
 Peer.prototype.getStats = function (cb) {
   var self = this
-  if (!self._pc.getStats) { // No ability to call stats
-    cb([])
-  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) { // Mozilla
+
+  // Promise-based getStats() (standard)
+  if (self._pc.getStats.length === 0) {
+    self._pc.getStats().then(function (res) {
+      var reports = []
+      res.forEach(function (report) {
+        reports.push(report)
+      })
+      cb(null, reports)
+    }, function (err) { cb(err) })
+
+  // Two-parameter callback-based getStats() (deprecated, former standard)
+  } else if (self._isReactNativeWebrtc) {
     self._pc.getStats(null, function (res) {
-      var items = []
-      res.forEach(function (item) {
-        items.push(item)
+      var reports = []
+      res.forEach(function (report) {
+        reports.push(report)
       })
-      cb(items)
-    }, function (err) { self._onError(err) })
-  } else {
-    self._pc.getStats(function (res) { // Chrome
-      var items = []
+      cb(null, reports)
+    }, function (err) { cb(err) })
+
+  // Single-parameter callback-based getStats() (non-standard)
+  } else if (self._pc.getStats.length > 0) {
+    self._pc.getStats(function (res) {
+      var reports = []
       res.result().forEach(function (result) {
-        var item = {}
+        var report = {}
         result.names().forEach(function (name) {
-          item[name] = result.stat(name)
+          report[name] = result.stat(name)
         })
-        item.id = result.id
-        item.type = result.type
-        item.timestamp = result.timestamp
-        items.push(item)
+        report.id = result.id
+        report.type = result.type
+        report.timestamp = result.timestamp
+        reports.push(report)
       })
-      cb(items)
-    })
+      cb(null, reports)
+    }, function (err) { cb(err) })
+
+  // Unknown browser, skip getStats() since it's anyone's guess which style of
+  // getStats() they implement.
+  } else {
+    cb(null, [])
   }
 }
 
@@ -10103,54 +10390,87 @@ Peer.prototype._maybeReady = function () {
   if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
   self._connecting = true
 
-  self.getStats(function (items) {
+  self.getStats(function (err, items) {
+    // Treat getStats error as non-fatal. It's not essential.
+    if (err) items = []
+
     self._connecting = false
     self.connected = true
 
     var remoteCandidates = {}
     var localCandidates = {}
+    var candidatePairs = {}
 
-    function setActiveCandidates (item) {
-      var local = localCandidates[item.localCandidateId]
-      var remote = remoteCandidates[item.remoteCandidateId]
+    items.forEach(function (item) {
+      // TODO: Once all browsers support the hyphenated stats report types, remove
+      // the non-hypenated ones
+      if (item.type === 'remotecandidate' || item.type === 'remote-candidate') {
+        remoteCandidates[item.id] = item
+      }
+      if (item.type === 'localcandidate' || item.type === 'local-candidate') {
+        localCandidates[item.id] = item
+      }
+      if (item.type === 'candidatepair' || item.type === 'candidate-pair') {
+        candidatePairs[item.id] = item
+      }
+    })
 
-      if (local) {
+    items.forEach(function (item) {
+      // Spec-compliant
+      if (item.type === 'transport') {
+        setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
+      }
+
+      // Old implementations
+      if (
+        (item.type === 'googCandidatePair' && item.googActiveConnection === 'true') ||
+        ((item.type === 'candidatepair' || item.type === 'candidate-pair') && item.selected)
+      ) {
+        setSelectedCandidatePair(item)
+      }
+    })
+
+    function setSelectedCandidatePair (selectedCandidatePair) {
+      var local = localCandidates[selectedCandidatePair.localCandidateId]
+
+      if (local && local.ip) {
+        // Spec
+        self.localAddress = local.ip
+        self.localPort = Number(local.port)
+      } else if (local && local.ipAddress) {
+        // Firefox
         self.localAddress = local.ipAddress
         self.localPort = Number(local.portNumber)
-      } else if (typeof item.googLocalAddress === 'string') {
-        // Sometimes `item.id` is undefined in `wrtc` and Chrome
-        // See: https://github.com/feross/simple-peer/issues/66
-        local = item.googLocalAddress.split(':')
+      } else if (typeof selectedCandidatePair.googLocalAddress === 'string') {
+        // TODO: remove this once Chrome 58 is released
+        local = selectedCandidatePair.googLocalAddress.split(':')
         self.localAddress = local[0]
         self.localPort = Number(local[1])
       }
-      self._debug('connect local: %s:%s', self.localAddress, self.localPort)
 
-      if (remote) {
+      var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
+
+      if (remote && remote.ip) {
+        // Spec
+        self.remoteAddress = remote.ip
+        self.remotePort = Number(remote.port)
+      } else if (remote && remote.ipAddress) {
+        // Firefox
         self.remoteAddress = remote.ipAddress
         self.remotePort = Number(remote.portNumber)
-        self.remoteFamily = 'IPv4'
-      } else if (typeof item.googRemoteAddress === 'string') {
-        remote = item.googRemoteAddress.split(':')
+      } else if (typeof selectedCandidatePair.googRemoteAddress === 'string') {
+        // TODO: remove this once Chrome 58 is released
+        remote = selectedCandidatePair.googRemoteAddress.split(':')
         self.remoteAddress = remote[0]
         self.remotePort = Number(remote[1])
-        self.remoteFamily = 'IPv4'
       }
-      self._debug('connect remote: %s:%s', self.remoteAddress, self.remotePort)
-    }
+      self.remoteFamily = 'IPv4'
 
-    items.forEach(function (item) {
-      if (item.type === 'remotecandidate') remoteCandidates[item.id] = item
-      if (item.type === 'localcandidate') localCandidates[item.id] = item
-    })
-
-    items.forEach(function (item) {
-      var isCandidatePair = (
-        (item.type === 'googCandidatePair' && item.googActiveConnection === 'true') ||
-        (item.type === 'candidatepair' && item.selected)
+      self._debug(
+        'connect local: %s:%s remote: %s:%s',
+        self.localAddress, self.localPort, self.remoteAddress, self.remotePort
       )
-      if (isCandidatePair) setActiveCandidates(item)
-    })
+    }
 
     if (self._chunk) {
       try {
@@ -10166,18 +10486,23 @@ Peer.prototype._maybeReady = function () {
       cb(null)
     }
 
-    self._interval = setInterval(function () {
-      if (!self._cb || !self._channel || self._channel.bufferedAmount > self._maxBufferedAmount) return
-      self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
-      var cb = self._cb
-      self._cb = null
-      cb(null)
-    }, 150)
-    if (self._interval.unref) self._interval.unref()
+    // If `bufferedAmountLowThreshold` and 'onbufferedamountlow' are unsupported,
+    // fallback to using setInterval to implement backpressure.
+    if (typeof self._channel.bufferedAmountLowThreshold !== 'number') {
+      self._interval = setInterval(function () { self._onInterval() }, 150)
+      if (self._interval.unref) self._interval.unref()
+    }
 
     self._debug('connect')
     self.emit('connect')
   })
+}
+
+Peer.prototype._onInterval = function () {
+  if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+    return
+  }
+  this._onChannelBufferedAmountLow()
 }
 
 Peer.prototype._onSignalingStateChange = function () {
@@ -10208,10 +10533,17 @@ Peer.prototype._onChannelMessage = function (event) {
   var self = this
   if (self.destroyed) return
   var data = event.data
-  self._debug('read: %d bytes', data.byteLength || data.length)
-
   if (data instanceof ArrayBuffer) data = new Buffer(data)
   self.push(data)
+}
+
+Peer.prototype._onChannelBufferedAmountLow = function () {
+  var self = this
+  if (self.destroyed || !self._cb) return
+  self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
+  var cb = self._cb
+  self._cb = null
+  cb(null)
 }
 
 Peer.prototype._onChannelOpen = function () {
@@ -10240,6 +10572,9 @@ Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
   self._debug('on track')
+  var id = event.streams[0].id
+  if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
+  self._previousStreams.push(id)
   self.emit('stream', event.streams[0])
 }
 
@@ -10253,9 +10588,57 @@ Peer.prototype._onError = function (err) {
 Peer.prototype._debug = function () {
   var self = this
   var args = [].slice.call(arguments)
-  var id = self.channelName && self.channelName.substring(0, 7)
-  args[0] = '[' + id + '] ' + args[0]
+  args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
+}
+
+// Transform constraints objects into the new format (unless Chromium)
+// TODO: This can be removed when Chromium supports the new format
+Peer.prototype._transformConstraints = function (constraints) {
+  var self = this
+
+  if (Object.keys(constraints).length === 0) {
+    return constraints
+  }
+
+  if ((constraints.mandatory || constraints.optional) && !self._isChromium) {
+    // convert to new format
+
+    // Merge mandatory and optional objects, prioritizing mandatory
+    var newConstraints = Object.assign({}, constraints.optional, constraints.mandatory)
+
+    // fix casing
+    if (newConstraints.OfferToReceiveVideo !== undefined) {
+      newConstraints.offerToReceiveVideo = newConstraints.OfferToReceiveVideo
+      delete newConstraints['OfferToReceiveVideo']
+    }
+
+    if (newConstraints.OfferToReceiveAudio !== undefined) {
+      newConstraints.offerToReceiveAudio = newConstraints.OfferToReceiveAudio
+      delete newConstraints['OfferToReceiveAudio']
+    }
+
+    return newConstraints
+  } else if (!constraints.mandatory && !constraints.optional && self._isChromium) {
+    // convert to old format
+
+    // fix casing
+    if (constraints.offerToReceiveVideo !== undefined) {
+      constraints.OfferToReceiveVideo = constraints.offerToReceiveVideo
+      delete constraints['offerToReceiveVideo']
+    }
+
+    if (constraints.offerToReceiveAudio !== undefined) {
+      constraints.OfferToReceiveAudio = constraints.offerToReceiveAudio
+      delete constraints['offerToReceiveAudio']
+    }
+
+    return {
+      mandatory: constraints // NOTE: All constraints are upgraded to mandatory
+    }
+  }
+
+  return constraints
 }
 
 function noop () {}
@@ -10265,7 +10648,8 @@ function noop () {}
 var Rusha = require('rusha')
 
 var rusha = new Rusha
-var crypto = window.crypto || window.msCrypto || {}
+var scope = typeof window !== 'undefined' ? window : self
+var crypto = scope.crypto || scope.msCrypto || {}
 var subtle = crypto.subtle || crypto.webkitSubtle
 
 function sha1sync (buf) {
@@ -10331,51 +10715,75 @@ module.exports = Socket
 
 var debug = require('debug')('simple-websocket')
 var inherits = require('inherits')
+var randombytes = require('randombytes')
 var stream = require('readable-stream')
 var ws = require('ws') // websockets in node - will be empty object in browser
 
-var _WebSocket = typeof WebSocket !== 'undefined' ? WebSocket : ws
+var _WebSocket = typeof ws !== 'function' ? WebSocket : ws
+
+var MAX_BUFFERED_AMOUNT = 64 * 1024
 
 inherits(Socket, stream.Duplex)
 
 /**
  * WebSocket. Same API as node core `net.Socket`. Duplex stream.
- * @param {string} url websocket server url
- * @param {Object} opts options to stream.Duplex
+ * @param {Object} opts
+ * @param {string=} opts.url websocket server url
+ * @param {string=} opts.socket raw websocket instance to wrap
  */
-function Socket (url, opts) {
+function Socket (opts) {
   var self = this
-  if (!(self instanceof Socket)) return new Socket(url, opts)
+  if (!(self instanceof Socket)) return new Socket(opts)
   if (!opts) opts = {}
-  debug('new websocket: %s %o', url, opts)
 
-  opts.allowHalfOpen = false
-  if (opts.highWaterMark == null) opts.highWaterMark = 1024 * 1024
+  // Support simple usage: `new Socket(url)`
+  if (typeof opts === 'string') {
+    opts = { url: opts }
+  }
+
+  if (opts.url == null && opts.socket == null) {
+    throw new Error('Missing required `url` or `socket` option')
+  }
+  if (opts.url != null && opts.socket != null) {
+    throw new Error('Must specify either `url` or `socket` option, not both')
+  }
+
+  self._id = randombytes(4).toString('hex').slice(0, 7)
+  self._debug('new websocket: %o', opts)
+
+  opts = Object.assign({
+    allowHalfOpen: false
+  }, opts)
 
   stream.Duplex.call(self, opts)
 
-  self.url = url
   self.connected = false
   self.destroyed = false
 
-  self._maxBufferedAmount = opts.highWaterMark
   self._chunk = null
   self._cb = null
   self._interval = null
 
-  try {
-    if (typeof WebSocket === 'undefined') {
-      // `ws` package accepts options
-      self._ws = new _WebSocket(self.url, opts)
-    } else {
-      self._ws = new _WebSocket(self.url)
+  if (opts.socket) {
+    self.url = opts.socket.url
+    self._ws = opts.socket
+  } else {
+    self.url = opts.url
+    try {
+      if (typeof ws === 'function') {
+        // `ws` package accepts options
+        self._ws = new _WebSocket(opts.url, opts)
+      } else {
+        self._ws = new _WebSocket(opts.url)
+      }
+    } catch (err) {
+      process.nextTick(function () {
+        self._onError(err)
+      })
+      return
     }
-  } catch (err) {
-    process.nextTick(function () {
-      self._onError(err)
-    })
-    return
   }
+
   self._ws.binaryType = 'arraybuffer'
   self._ws.onopen = function () {
     self._onOpen()
@@ -10390,26 +10798,10 @@ function Socket (url, opts) {
     self._onError(new Error('connection error to ' + self.url))
   }
 
-  self.on('finish', function () {
-    if (self.connected) {
-      // When stream is finished writing, close socket connection. Half open connections
-      // are currently not supported.
-      // Wait a bit before destroying so the socket flushes.
-      // TODO: is there a more reliable way to accomplish this?
-      setTimeout(function () {
-        self._destroy()
-      }, 100)
-    } else {
-      // If socket is not connected when stream is finished writing, wait until data is
-      // flushed to network at "connect" event.
-      // TODO: is there a more reliable way to accomplish this?
-      self.once('connect', function () {
-        setTimeout(function () {
-          self._destroy()
-        }, 100)
-      })
-    }
-  })
+  self._onFinishBound = function () {
+    self._onFinish()
+  }
+  self.once('finish', self._onFinishBound)
 }
 
 Socket.WEBSOCKET_SUPPORT = !!_WebSocket
@@ -10419,16 +10811,11 @@ Socket.WEBSOCKET_SUPPORT = !!_WebSocket
  * @param {TypedArrayView|ArrayBuffer|Buffer|string|Blob|Object} chunk
  */
 Socket.prototype.send = function (chunk) {
-  var self = this
-
-  var len = chunk.length || chunk.byteLength || chunk.size
-  self._ws.send(chunk)
-  debug('write: %d bytes', len)
+  this._ws.send(chunk)
 }
 
 Socket.prototype.destroy = function (onclose) {
-  var self = this
-  self._destroy(null, onclose)
+  this._destroy(null, onclose)
 }
 
 Socket.prototype._destroy = function (err, onclose) {
@@ -10436,10 +10823,9 @@ Socket.prototype._destroy = function (err, onclose) {
   if (self.destroyed) return
   if (onclose) self.once('close', onclose)
 
-  debug('destroy (error: %s)', err && err.message)
+  self._debug('destroy (error: %s)', err && err.message)
 
-  this.readable = this.writable = false
-
+  self.readable = self.writable = false
   if (!self._readableState.ended) self.push(null)
   if (!self._writableState.finished) self.end()
 
@@ -10451,11 +10837,13 @@ Socket.prototype._destroy = function (err, onclose) {
   self._chunk = null
   self._cb = null
 
+  if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
+  self._onFinishBound = null
+
   if (self._ws) {
     var ws = self._ws
     var onClose = function () {
       ws.onclose = null
-      self.emit('close')
     }
     if (ws.readyState === _WebSocket.CLOSED) {
       onClose()
@@ -10475,41 +10863,59 @@ Socket.prototype._destroy = function (err, onclose) {
   self._ws = null
 
   if (err) self.emit('error', err)
+  self.emit('close')
 }
 
 Socket.prototype._read = function () {}
 
 Socket.prototype._write = function (chunk, encoding, cb) {
-  var self = this
-  if (self.destroyed) return cb(new Error('cannot write after socket is destroyed'))
+  if (this.destroyed) return cb(new Error('cannot write after socket is destroyed'))
 
-  if (self.connected) {
+  if (this.connected) {
     try {
-      self.send(chunk)
+      this.send(chunk)
     } catch (err) {
-      return self._onError(err)
+      return this._onError(err)
     }
-    if (typeof ws !== 'function' && self._ws.bufferedAmount > self._maxBufferedAmount) {
-      debug('start backpressure: bufferedAmount %d', self._ws.bufferedAmount)
-      self._cb = cb
+    if (typeof ws !== 'function' && this._ws.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+      this._debug('start backpressure: bufferedAmount %d', this._ws.bufferedAmount)
+      this._cb = cb
     } else {
       cb(null)
     }
   } else {
-    debug('write before connect')
-    self._chunk = chunk
-    self._cb = cb
+    this._debug('write before connect')
+    this._chunk = chunk
+    this._cb = cb
+  }
+}
+
+// When stream finishes writing, close socket. Half open connections are not
+// supported.
+Socket.prototype._onFinish = function () {
+  var self = this
+  if (self.destroyed) return
+
+  if (self.connected) {
+    destroySoon()
+  } else {
+    self.once('connect', destroySoon)
+  }
+
+  // Wait a bit before destroying so the socket flushes.
+  // TODO: is there a more reliable way to accomplish this?
+  function destroySoon () {
+    setTimeout(function () {
+      self._destroy()
+    }, 100)
   }
 }
 
 Socket.prototype._onMessage = function (event) {
-  var self = this
-  if (self.destroyed) return
+  if (this.destroyed) return
   var data = event.data
-  debug('read: %d bytes', data.byteLength || data.length)
-
   if (data instanceof ArrayBuffer) data = new Buffer(data)
-  self.push(data)
+  this.push(data)
 }
 
 Socket.prototype._onOpen = function () {
@@ -10524,48 +10930,56 @@ Socket.prototype._onOpen = function () {
       return self._onError(err)
     }
     self._chunk = null
-    debug('sent chunk from "write before connect"')
+    self._debug('sent chunk from "write before connect"')
 
     var cb = self._cb
     self._cb = null
     cb(null)
   }
 
-  // No backpressure in node. The `ws` module has a buggy `bufferedAmount` property.
-  // See: https://github.com/websockets/ws/issues/492
+  // Backpressure is not implemented in Node.js. The `ws` module has a buggy
+  // `bufferedAmount` property. See: https://github.com/websockets/ws/issues/492
   if (typeof ws !== 'function') {
     self._interval = setInterval(function () {
-      if (!self._cb || !self._ws || self._ws.bufferedAmount > self._maxBufferedAmount) {
-        return
-      }
-      debug('ending backpressure: bufferedAmount %d', self._ws.bufferedAmount)
-      var cb = self._cb
-      self._cb = null
-      cb(null)
+      self._onInterval()
     }, 150)
     if (self._interval.unref) self._interval.unref()
   }
 
-  debug('connect')
+  self._debug('connect')
   self.emit('connect')
 }
 
+Socket.prototype._onInterval = function () {
+  if (!this._cb || !this._ws || this._ws.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+    return
+  }
+  this._debug('ending backpressure: bufferedAmount %d', this._ws.bufferedAmount)
+  var cb = this._cb
+  this._cb = null
+  cb(null)
+}
+
 Socket.prototype._onClose = function () {
-  var self = this
-  if (self.destroyed) return
-  debug('on close')
-  self._destroy()
+  if (this.destroyed) return
+  this._debug('on close')
+  this._destroy()
 }
 
 Socket.prototype._onError = function (err) {
-  var self = this
-  if (self.destroyed) return
-  debug('error: %s', err.message || err)
-  self._destroy(err)
+  if (this.destroyed) return
+  this._debug('error: %s', err.message || err)
+  this._destroy(err)
+}
+
+Socket.prototype._debug = function () {
+  var args = [].slice.call(arguments)
+  args[0] = '[' + this._id + '] ' + args[0]
+  debug.apply(null, args)
 }
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":126,"buffer":115,"debug":22,"inherits":31,"readable-stream":65,"ws":113}],77:[function(require,module,exports){
+},{"_process":126,"buffer":115,"debug":22,"inherits":31,"randombytes":57,"readable-stream":65,"ws":113}],77:[function(require,module,exports){
 var tick = 1
 var maxTick = 65535
 var resolution = 4
@@ -10694,12 +11108,34 @@ try {
 	exports.blobConstructor = true
 } catch (e) {}
 
-var xhr = new global.XMLHttpRequest()
-// If XDomainRequest is available (ie only, where xhr might not work
-// cross domain), use the page location. Otherwise use example.com
-xhr.open('GET', global.XDomainRequest ? '/' : 'https://example.com')
+// The xhr request to example.com may violate some restrictive CSP configurations,
+// so if we're running in a browser that supports `fetch`, avoid calling getXHR()
+// and assume support for certain features below.
+var xhr
+function getXHR () {
+	// Cache the xhr value
+	if (xhr !== undefined) return xhr
+
+	if (global.XMLHttpRequest) {
+		xhr = new global.XMLHttpRequest()
+		// If XDomainRequest is available (ie only, where xhr might not work
+		// cross domain), use the page location. Otherwise use example.com
+		// Note: this doesn't actually make an http request.
+		try {
+			xhr.open('GET', global.XDomainRequest ? '/' : 'https://example.com')
+		} catch(e) {
+			xhr = null
+		}
+	} else {
+		// Service workers don't have XHR
+		xhr = null
+	}
+	return xhr
+}
 
 function checkTypeSupport (type) {
+	var xhr = getXHR()
+	if (!xhr) return false
 	try {
 		xhr.responseType = type
 		return xhr.responseType === type
@@ -10712,17 +11148,24 @@ function checkTypeSupport (type) {
 var haveArrayBuffer = typeof global.ArrayBuffer !== 'undefined'
 var haveSlice = haveArrayBuffer && isFunction(global.ArrayBuffer.prototype.slice)
 
-exports.arraybuffer = haveArrayBuffer && checkTypeSupport('arraybuffer')
+// If fetch is supported, then arraybuffer will be supported too. Skip calling
+// checkTypeSupport(), since that calls getXHR().
+exports.arraybuffer = exports.fetch || (haveArrayBuffer && checkTypeSupport('arraybuffer'))
+
 // These next two tests unavoidably show warnings in Chrome. Since fetch will always
 // be used if it's available, just return false for these to avoid the warnings.
 exports.msstream = !exports.fetch && haveSlice && checkTypeSupport('ms-stream')
 exports.mozchunkedarraybuffer = !exports.fetch && haveArrayBuffer &&
 	checkTypeSupport('moz-chunked-arraybuffer')
-exports.overrideMimeType = isFunction(xhr.overrideMimeType)
+
+// If fetch is supported, then overrideMimeType will be supported too. Skip calling
+// getXHR().
+exports.overrideMimeType = exports.fetch || (getXHR() ? isFunction(getXHR().overrideMimeType) : false)
+
 exports.vbArray = isFunction(global.VBArray)
 
 function isFunction (value) {
-  return typeof value === 'function'
+	return typeof value === 'function'
 }
 
 xhr = null // Help gc
@@ -10770,8 +11213,9 @@ var ClientRequest = module.exports = function (opts) {
 
 	var preferBinary
 	var useFetch = true
-	if (opts.mode === 'disable-fetch') {
-		// If the use of XHR should be preferred and includes preserving the 'content-type' header
+	if (opts.mode === 'disable-fetch' || 'timeout' in opts) {
+		// If the use of XHR should be preferred and includes preserving the 'content-type' header.
+		// Force XHR to be used since the Fetch API does not yet support timeouts.
 		useFetch = false
 		preferBinary = true
 	} else if (opts.mode === 'prefer-streaming') {
@@ -10829,8 +11273,8 @@ ClientRequest.prototype._onFinish = function () {
 	var opts = self._opts
 
 	var headersObj = self._headers
-	var body
-	if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH') {
+	var body = null
+	if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH' || opts.method === 'MERGE') {
 		if (capability.blobConstructor) {
 			body = new global.Blob(self._body.map(function (buffer) {
 				return toArrayBuffer(buffer)
@@ -10851,7 +11295,7 @@ ClientRequest.prototype._onFinish = function () {
 		global.fetch(self._opts.url, {
 			method: self._opts.method,
 			headers: headers,
-			body: body,
+			body: body || undefined,
 			mode: 'cors',
 			credentials: opts.withCredentials ? 'include' : 'same-origin'
 		}).then(function (response) {
@@ -10880,6 +11324,13 @@ ClientRequest.prototype._onFinish = function () {
 
 		if (self._mode === 'text' && 'overrideMimeType' in xhr)
 			xhr.overrideMimeType('text/plain; charset=x-user-defined')
+
+		if ('timeout' in opts) {
+			xhr.timeout = opts.timeout
+			xhr.ontimeout = function () {
+				self.emit('timeout')
+			}
+		}
 
 		Object.keys(headersObj).forEach(function (name) {
 			xhr.setRequestHeader(headersObj[name].name, headersObj[name].value)
@@ -10952,6 +11403,10 @@ ClientRequest.prototype._connect = function () {
 		return
 
 	self._response = new IncomingMessage(self._xhr, self._fetchResponse, self._mode)
+	self._response.on('error', function(err) {
+		self.emit('error', err)
+	})
+
 	self.emit('response', self._response)
 }
 
@@ -11071,6 +11526,8 @@ var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
 				}
 				self.push(new Buffer(result.value))
 				read()
+			}).catch(function(err) {
+				self.emit('error', err)
 			})
 		}
 		read()
@@ -11694,6 +12151,7 @@ function Discovery (opts) {
     ? opts.infoHash
     : opts.infoHash.toString('hex')
   self._port = opts.port // torrent port
+  self._userAgent = opts.userAgent // User-Agent header for http requests
 
   self.destroyed = false
 
@@ -11712,10 +12170,10 @@ function Discovery (opts) {
   }
   self._onDHTPeer = function (peer, infoHash) {
     if (infoHash.toString('hex') !== self.infoHash) return
-    self.emit('peer', peer.host + ':' + peer.port)
+    self.emit('peer', peer.host + ':' + peer.port, 'dht')
   }
   self._onTrackerPeer = function (peer) {
-    self.emit('peer', peer)
+    self.emit('peer', peer, 'tracker')
   }
   self._onTrackerAnnounce = function () {
     self.emit('trackerAnnounce')
@@ -11821,7 +12279,8 @@ Discovery.prototype._createTracker = function () {
     infoHash: this.infoHash,
     announce: this._announce,
     peerId: this.peerId,
-    port: this._port
+    port: this._port,
+    userAgent: this._userAgent
   })
 
   var tracker = new Tracker(opts)
@@ -12765,7 +13224,12 @@ MP4Remuxer.prototype.seek = function (time) {
 		})
 
 		self._tracks.forEach(function (track) {
-			track.inStream = new RangeSliceStream(startOffset)
+			track.inStream = new RangeSliceStream(startOffset, {
+				// Allow up to a 10MB offset between audio and video,
+				// which should be fine for any reasonable interleaving
+				// interval and bitrate
+				highWaterMark: 10000000
+			})
 			fileStream.pipe(track.inStream)
 		})
 	}
@@ -13087,7 +13551,7 @@ function WebTorrent (opts) {
   } else if (Buffer.isBuffer(opts.peerId)) {
     self.peerId = opts.peerId.toString('hex')
   } else {
-    self.peerId = Buffer.from(VERSION_PREFIX + randombytes(6).toString('hex')).toString('hex')
+    self.peerId = Buffer.from(VERSION_PREFIX + randombytes(9).toString('base64')).toString('hex')
   }
   self.peerIdBuffer = Buffer.from(self.peerId, 'hex')
 
@@ -13100,6 +13564,8 @@ function WebTorrent (opts) {
   }
   self.nodeIdBuffer = Buffer.from(self.nodeId, 'hex')
 
+  self._debugId = self.peerId.toString('hex').substring(0, 7)
+
   self.destroyed = false
   self.listening = false
   self.torrentPort = opts.torrentPort || 0
@@ -13108,7 +13574,7 @@ function WebTorrent (opts) {
   self.torrents = []
   self.maxConns = Number(opts.maxConns) || 55
 
-  debug(
+  self._debug(
     'new webtorrent (peerId %s, nodeId %s, port %s)',
     self.peerId, self.nodeId, self.torrentPort
   )
@@ -13123,9 +13589,11 @@ function WebTorrent (opts) {
     if (opts.wrtc) {
       // TODO: remove in v1
       console.warn('WebTorrent: opts.wrtc is deprecated. Use opts.tracker.wrtc instead')
-      self.tracker.wrtc = opts.wrtc // to support `webtorrent-hybrid` package
+      self.tracker.wrtc = opts.wrtc
     }
-    if (global.WRTC && !self.tracker.wrtc) self.tracker.wrtc = global.WRTC
+    if (global.WRTC && !self.tracker.wrtc) {
+      self.tracker.wrtc = global.WRTC
+    }
   }
 
   if (typeof TCPPool === 'function') {
@@ -13272,7 +13740,7 @@ WebTorrent.prototype.add = function (torrentId, opts, ontorrent) {
   if (self.destroyed) throw new Error('client is destroyed')
   if (typeof opts === 'function') return self.add(torrentId, null, opts)
 
-  debug('add')
+  self._debug('add')
   opts = opts ? extend(opts) : {}
 
   var torrent = new Torrent(torrentId, self, opts)
@@ -13319,7 +13787,7 @@ WebTorrent.prototype.seed = function (input, opts, onseed) {
   if (self.destroyed) throw new Error('client is destroyed')
   if (typeof opts === 'function') return self.seed(input, null, opts)
 
-  debug('seed')
+  self._debug('seed')
   opts = opts ? extend(opts) : {}
 
   // When seeding from fs path, initialize store from that path to avoid a copy
@@ -13382,7 +13850,7 @@ WebTorrent.prototype.seed = function (input, opts, onseed) {
   }
 
   function _onseed (torrent) {
-    debug('on seed')
+    self._debug('on seed')
     if (typeof onseed === 'function') onseed(torrent)
     torrent.emit('seed')
     self.emit('seed', torrent)
@@ -13397,7 +13865,7 @@ WebTorrent.prototype.seed = function (input, opts, onseed) {
  * @param  {function} cb
  */
 WebTorrent.prototype.remove = function (torrentId, cb) {
-  debug('remove')
+  this._debug('remove')
   var torrent = this.get(torrentId)
   if (!torrent) throw new Error('No torrent with id ' + torrentId)
   this._remove(torrentId, cb)
@@ -13428,7 +13896,7 @@ WebTorrent.prototype.destroy = function (cb) {
 
 WebTorrent.prototype._destroy = function (err, cb) {
   var self = this
-  debug('client destroy')
+  self._debug('client destroy')
   self.destroyed = true
 
   var tasks = self.torrents.map(function (torrent) {
@@ -13459,6 +13927,7 @@ WebTorrent.prototype._destroy = function (err, cb) {
 }
 
 WebTorrent.prototype._onListening = function () {
+  this._debug('listening')
   this.listening = true
 
   if (this._tcpPool) {
@@ -13469,6 +13938,12 @@ WebTorrent.prototype._onListening = function () {
   }
 
   this.emit('listening')
+}
+
+WebTorrent.prototype._debug = function () {
+  var args = [].slice.call(arguments)
+  args[0] = '[' + this._debugId + '] ' + args[0]
+  debug.apply(null, args)
 }
 
 /**
@@ -13633,6 +14108,24 @@ function File (torrent, file) {
     this.emit('done')
   }
 }
+
+Object.defineProperty(File.prototype, 'downloaded', {
+  get: function () {
+    if (!this._torrent.bitfield) return 0
+    var downloaded = 0
+    for (var index = this._startPiece; index <= this._endPiece; ++index) {
+      if (this._torrent.bitfield.get(index)) {
+        // verified data
+        downloaded += this._torrent.pieceLength
+      } else {
+        // "in progress" data
+        var piece = this._torrent.pieces[index]
+        downloaded += (piece.length - piece.missing)
+      }
+    }
+    return downloaded
+  }
+})
 
 File.prototype.select = function (priority) {
   if (this.length === 0) return
@@ -14127,12 +14620,13 @@ var FILESYSTEM_CONCURRENCY = 2
 var RECONNECT_WAIT = [ 1000, 5000, 15000 ]
 
 var VERSION = require('../package.json').version
+var USER_AGENT = 'WebTorrent/' + VERSION + ' (https://webtorrent.io)'
 
 var TMP
 try {
   TMP = path.join(fs.statSync('/tmp') && '/tmp', 'webtorrent')
 } catch (err) {
-  TMP = path.join(typeof os.tmpDir === 'function' ? os.tmpDir() : '/', 'webtorrent')
+  TMP = path.join(typeof os.tmpdir === 'function' ? os.tmpdir() : '/', 'webtorrent')
 }
 
 inherits(Torrent, EventEmitter)
@@ -14140,10 +14634,8 @@ inherits(Torrent, EventEmitter)
 function Torrent (torrentId, client, opts) {
   EventEmitter.call(this)
 
+  this._debugId = 'unknown infohash'
   this.client = client
-  this._debugId = this.client.peerId.toString('hex').substring(0, 7)
-
-  this._debug('new torrent')
 
   this.announce = opts.announce
   this.urlList = opts.urlList
@@ -14198,6 +14690,8 @@ function Torrent (torrentId, client, opts) {
   this._fileModtimes = opts.fileModtimes
 
   if (torrentId !== null) this._onTorrentId(torrentId)
+
+  this._debug('new torrent')
 }
 
 Object.defineProperty(Torrent.prototype, 'timeRemaining', {
@@ -14300,6 +14794,7 @@ Torrent.prototype._onTorrentId = function (torrentId) {
   if (parsedTorrent) {
     // Attempt to set infoHash property synchronously
     self.infoHash = parsedTorrent.infoHash
+    self._debugId = parsedTorrent.infoHash.toString('hex').substring(0, 7)
     process.nextTick(function () {
       if (self.destroyed) return
       self._onParsedTorrent(parsedTorrent)
@@ -14351,6 +14846,8 @@ Torrent.prototype._onParsedTorrent = function (parsedTorrent) {
 }
 
 Torrent.prototype._processParsedTorrent = function (parsedTorrent) {
+  this._debugId = parsedTorrent.infoHash.toString('hex').substring(0, 7)
+
   if (this.announce) {
     // Allow specifying trackers via `opts` parameter
     parsedTorrent.announce = parsedTorrent.announce.concat(this.announce)
@@ -14407,7 +14904,8 @@ Torrent.prototype._onListening = function () {
     peerId: self.client.peerId,
     dht: !self.private && self.client.dht,
     tracker: trackerOpts,
-    port: self.client.torrentPort
+    port: self.client.torrentPort,
+    userAgent: USER_AGENT
   })
 
   self.discovery.on('error', onError)
@@ -14462,7 +14960,7 @@ Torrent.prototype._getMetadataFromServer = function () {
 
   function getMetadataFromURL (url, cb) {
     if (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0) {
-      self._debug('skipping non-http xs param: %s', url)
+      self.emit('warning', new Error('skipping non-http xs param: ' + url))
       return cb(null)
     }
 
@@ -14470,14 +14968,14 @@ Torrent.prototype._getMetadataFromServer = function () {
       url: url,
       method: 'GET',
       headers: {
-        'user-agent': 'WebTorrent/' + VERSION + ' (https://webtorrent.io)'
+        'user-agent': USER_AGENT
       }
     }
     var req
     try {
       req = get.concat(opts, onResponse)
     } catch (err) {
-      self._debug('skipping invalid url xs param: %s', url)
+      self.emit('warning', new Error('skipping invalid url xs param: ' + url))
       return cb(null)
     }
 
@@ -14488,11 +14986,11 @@ Torrent.prototype._getMetadataFromServer = function () {
       if (self.metadata) return cb(null)
 
       if (err) {
-        self._debug('http error from xs param: %s', url)
+        self.emit('warning', new Error('http error from xs param: ' + url))
         return cb(null)
       }
       if (res.statusCode !== 200) {
-        self._debug('non-200 status code %s from xs param: %s', res.statusCode, url)
+        self.emit('warning', new Error('non-200 status code ' + res.statusCode + ' from xs param: ' + url))
         return cb(null)
       }
 
@@ -14502,12 +15000,12 @@ Torrent.prototype._getMetadataFromServer = function () {
       } catch (err) {}
 
       if (!parsedTorrent) {
-        self._debug('got invalid torrent file from xs param: %s', url)
+        self.emit('warning', new Error('got invalid torrent file from xs param: ' + url))
         return cb(null)
       }
 
       if (parsedTorrent.infoHash !== self.infoHash) {
-        self._debug('got torrent file with incorrect info hash from xs param: %s', url)
+        self.emit('warning', new Error('got torrent file with incorrect info hash from xs param: ' + url))
         return cb(null)
       }
 
@@ -14657,9 +15155,14 @@ Torrent.prototype._verifyPieces = function () {
   parallelLimit(self.pieces.map(function (_, index) {
     return function (cb) {
       if (self.destroyed) return cb(new Error('torrent is destroyed'))
+
       self.store.get(index, function (err, buf) {
+        if (self.destroyed) return cb(new Error('torrent is destroyed'))
+
         if (err) return process.nextTick(cb, null) // ignore error
         sha1(buf, function (hash) {
+          if (self.destroyed) return cb(new Error('torrent is destroyed'))
+
           if (hash === self._hashes[index]) {
             if (!self.pieces[index]) return
             self._debug('piece verified %s', index)
@@ -14821,7 +15324,6 @@ Torrent.prototype.addPeer = function (peer) {
 Torrent.prototype._addPeer = function (peer) {
   var self = this
   if (self.destroyed) {
-    self._debug('ignoring peer: torrent is destroyed')
     if (typeof peer !== 'string') peer.destroy()
     return null
   }
@@ -14870,13 +15372,13 @@ Torrent.prototype.addWebSeed = function (url) {
   if (this.destroyed) throw new Error('torrent is destroyed')
 
   if (!/^https?:\/\/.+/.test(url)) {
-    this._debug('ignoring invalid web seed %s', url)
+    this.emit('warning', new Error('ignoring invalid web seed: ' + url))
     this.emit('invalidPeer', url)
     return
   }
 
   if (this._peers[url]) {
-    this._debug('ignoring duplicate web seed %s', url)
+    this.emit('warning', new Error('ignoring duplicate web seed: ' + url))
     this.emit('invalidPeer', url)
     return
   }
@@ -14959,7 +15461,7 @@ Torrent.prototype.deselect = function (start, end, priority) {
   for (var i = 0; i < self._selections.length; ++i) {
     var s = self._selections[i]
     if (s.from === start && s.to === end && s.priority === priority) {
-      self._selections.splice(i--, 1)
+      self._selections.splice(i, 1)
       break
     }
   }
@@ -15168,8 +15670,10 @@ Torrent.prototype._onWireWithMetadata = function (wire) {
     wire.port(self.client.dht.address().port)
   }
 
-  timeoutId = setTimeout(onChokeTimeout, CHOKE_TIMEOUT)
-  if (timeoutId.unref) timeoutId.unref()
+  if (wire.type !== 'webSeed') { // do not choke on webseeds
+    timeoutId = setTimeout(onChokeTimeout, CHOKE_TIMEOUT)
+    if (timeoutId.unref) timeoutId.unref()
+  }
 
   wire.isSeeder = false
   updateSeedStatus()
@@ -15195,13 +15699,16 @@ Torrent.prototype._updateSelections = function () {
 Torrent.prototype._gcSelections = function () {
   var self = this
 
-  for (var i = 0; i < self._selections.length; i++) {
+  var i
+  var toRemove = []
+
+  for (i = 0; i < self._selections.length; ++i) {
     var s = self._selections[i]
     var oldOffset = s.offset
 
     // check for newly downloaded pieces in selection
     while (self.bitfield.get(s.from + s.offset) && s.from + s.offset < s.to) {
-      s.offset++
+      s.offset += 1
     }
 
     if (oldOffset !== s.offset) s.notify()
@@ -15209,8 +15716,16 @@ Torrent.prototype._gcSelections = function () {
     if (!self.bitfield.get(s.from + s.offset)) continue
 
     // remove fully downloaded selection
-    self._selections.splice(i--, 1) // decrement i to offset splice
-    s.notify() // TODO: this may notify twice in a row. is this a problem?
+    toRemove.push(i)
+  }
+
+  if (toRemove.length > 0) {
+    // Since self._selections is being modified in-place, it's necessary to
+    // traverse `toRemove` in reverse.
+    for (i = toRemove.length - 1; i >= 0; --i) {
+      self._selections.splice(i, 1)
+    }
+    s.notify()
     self._updateInterest()
   }
 
@@ -15591,6 +16106,8 @@ Torrent.prototype._request = function (wire, index, hotswap) {
     // TODO: might need to set self.pieces[index] = null here since sha1 is async
 
     sha1(buf, function (hash) {
+      if (self.destroyed) return
+
       if (hash === self._hashes[index]) {
         if (!self.pieces[index]) return
         self._debug('piece verified %s', index)
@@ -15605,7 +16122,9 @@ Torrent.prototype._request = function (wire, index, hotswap) {
           wire.have(index)
         })
 
-        self._checkDone()
+        // We also check `self.destroyed` since `torrent.destroy()` could have been
+        // called in the `torrent.on('done')` handler, triggered by `_checkDone()`.
+        if (self._checkDone() && !self.destroyed) self.discovery.complete()
       } else {
         self.pieces[index] = new Piece(piece.length)
         self.emit('warning', new Error('Piece ' + index + ' failed verification'))
@@ -15652,11 +16171,11 @@ Torrent.prototype._checkDone = function () {
   if (!self.done && done) {
     self.done = true
     self._debug('torrent done: ' + self.infoHash)
-    self.discovery.complete()
     self.emit('done')
   }
-
   self._gcSelections()
+
+  return done
 }
 
 Torrent.prototype.load = function (streams, cb) {
@@ -15705,7 +16224,7 @@ Torrent.prototype.resume = function () {
 
 Torrent.prototype._debug = function () {
   var args = [].slice.call(arguments)
-  args[0] = '[' + this._debugId + '] ' + args[0]
+  args[0] = '[' + this.client._debugId + '] [' + this._debugId + '] ' + args[0]
   debug.apply(null, args)
 }
 
@@ -15932,12 +16451,7 @@ WebConn.prototype.httpRequest = function (pieceIndex, offset, length, cb) {
         range: 'bytes=' + start + '-' + end
       }
     }
-    get.concat(opts, function (err, res, data) {
-      if (hasError) return
-      if (err) {
-        hasError = true
-        return cb(err)
-      }
+    function onResponse (res, data) {
       if (res.statusCode < 200 || res.statusCode >= 300) {
         hasError = true
         return cb(new Error('Unexpected HTTP status code ' + res.statusCode))
@@ -15955,6 +16469,51 @@ WebConn.prototype.httpRequest = function (pieceIndex, offset, length, cb) {
           cb(null, ret)
         }
       }
+    }
+    get.concat(opts, function (err, res, data) {
+      if (hasError) return
+      if (err) {
+        // Browsers allow HTTP redirects for simple cross-origin
+        // requests but not for requests that require preflight.
+        // Use a simple request to unravel any redirects and get the
+        // final URL.  Retry the original request with the new URL if
+        // it's different.
+        //
+        // This test is imperfect but it's simple and good for common
+        // cases.  It catches all cross-origin cases but matches a few
+        // same-origin cases too.
+        if (typeof window === 'undefined' || url.startsWith(window.location.origin + '/')) {
+          hasError = true
+          return cb(err)
+        }
+
+        return get.head(url, function (errHead, res) {
+          if (hasError) return
+          if (errHead) {
+            hasError = true
+            return cb(errHead)
+          }
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            hasError = true
+            return cb(new Error('Unexpected HTTP status code ' + res.statusCode))
+          }
+          if (res.url === url) {
+            hasError = true
+            return cb(err)
+          }
+
+          opts.url = res.url
+          get.concat(opts, function (err, res, data) {
+            if (hasError) return
+            if (err) {
+              hasError = true
+              return cb(err)
+            }
+            onResponse(res, data)
+          })
+        })
+      }
+      onResponse(res, data)
     })
   })
 }
@@ -15965,7 +16524,9 @@ WebConn.prototype.destroy = function () {
 }
 
 },{"../package.json":106,"bitfield":8,"bittorrent-protocol":9,"debug":22,"inherits":31,"safe-buffer":71,"simple-get":73,"simple-sha1":75}],106:[function(require,module,exports){
-module.exports={"version":"0.97.2"}
+module.exports={
+  "version": "0.98.10"
+}
 },{}],107:[function(require,module,exports){
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
@@ -16184,7 +16745,6 @@ arguments[4][111][0].apply(exports,arguments)
 },{"dup":111}],114:[function(require,module,exports){
 arguments[4][16][0].apply(exports,arguments)
 },{"buffer":115,"dup":16}],115:[function(require,module,exports){
-(function (global){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -16197,80 +16757,57 @@ arguments[4][16][0].apply(exports,arguments)
 
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
-var isArray = require('isarray')
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
 exports.INSPECT_MAX_BYTES = 50
 
+var K_MAX_LENGTH = 0x7fffffff
+exports.kMaxLength = K_MAX_LENGTH
+
 /**
  * If `Buffer.TYPED_ARRAY_SUPPORT`:
  *   === true    Use Uint8Array implementation (fastest)
- *   === false   Use Object implementation (most compatible, even IE6)
+ *   === false   Print warning and recommend using `buffer` v4.x which has an Object
+ *               implementation (most compatible, even IE6)
  *
  * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
  * Opera 11.6+, iOS 4.2+.
  *
- * Due to various browser bugs, sometimes the Object implementation will be used even
- * when the browser supports typed arrays.
- *
- * Note:
- *
- *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
- *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
- *
- *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
- *
- *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
- *     incorrect length in some situations.
-
- * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
- * get the Object implementation, which is slower but behaves correctly.
+ * We report that the browser does not support typed arrays if the are not subclassable
+ * using __proto__. Firefox 4-29 lacks support for adding new properties to `Uint8Array`
+ * (See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438). IE 10 lacks support
+ * for __proto__ and has a buggy typed array implementation.
  */
-Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
-  ? global.TYPED_ARRAY_SUPPORT
-  : typedArraySupport()
+Buffer.TYPED_ARRAY_SUPPORT = typedArraySupport()
 
-/*
- * Export kMaxLength after typed array support is determined.
- */
-exports.kMaxLength = kMaxLength()
+if (!Buffer.TYPED_ARRAY_SUPPORT && typeof console !== 'undefined' &&
+    typeof console.error === 'function') {
+  console.error(
+    'This browser lacks typed array (Uint8Array) support which is required by ' +
+    '`buffer` v5.x. Use `buffer` v4.x if you require old browser support.'
+  )
+}
 
 function typedArraySupport () {
+  // Can typed array instances can be augmented?
   try {
     var arr = new Uint8Array(1)
     arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }}
-    return arr.foo() === 42 && // typed array instances can be augmented
-        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+    return arr.foo() === 42
   } catch (e) {
     return false
   }
 }
 
-function kMaxLength () {
-  return Buffer.TYPED_ARRAY_SUPPORT
-    ? 0x7fffffff
-    : 0x3fffffff
-}
-
-function createBuffer (that, length) {
-  if (kMaxLength() < length) {
+function createBuffer (length) {
+  if (length > K_MAX_LENGTH) {
     throw new RangeError('Invalid typed array length')
   }
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    // Return an augmented `Uint8Array` instance, for best performance
-    that = new Uint8Array(length)
-    that.__proto__ = Buffer.prototype
-  } else {
-    // Fallback: Return an object instance of the Buffer class
-    if (that === null) {
-      that = new Buffer(length)
-    }
-    that.length = length
-  }
-
-  return that
+  // Return an augmented `Uint8Array` instance
+  var buf = new Uint8Array(length)
+  buf.__proto__ = Buffer.prototype
+  return buf
 }
 
 /**
@@ -16284,10 +16821,6 @@ function createBuffer (that, length) {
  */
 
 function Buffer (arg, encodingOrOffset, length) {
-  if (!Buffer.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer)) {
-    return new Buffer(arg, encodingOrOffset, length)
-  }
-
   // Common case.
   if (typeof arg === 'number') {
     if (typeof encodingOrOffset === 'string') {
@@ -16295,33 +16828,38 @@ function Buffer (arg, encodingOrOffset, length) {
         'If encoding is specified then the first argument must be a string'
       )
     }
-    return allocUnsafe(this, arg)
+    return allocUnsafe(arg)
   }
-  return from(this, arg, encodingOrOffset, length)
+  return from(arg, encodingOrOffset, length)
+}
+
+// Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
+if (typeof Symbol !== 'undefined' && Symbol.species &&
+    Buffer[Symbol.species] === Buffer) {
+  Object.defineProperty(Buffer, Symbol.species, {
+    value: null,
+    configurable: true,
+    enumerable: false,
+    writable: false
+  })
 }
 
 Buffer.poolSize = 8192 // not used by this implementation
 
-// TODO: Legacy, not needed anymore. Remove in next major version.
-Buffer._augment = function (arr) {
-  arr.__proto__ = Buffer.prototype
-  return arr
-}
-
-function from (that, value, encodingOrOffset, length) {
+function from (value, encodingOrOffset, length) {
   if (typeof value === 'number') {
     throw new TypeError('"value" argument must not be a number')
   }
 
-  if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
-    return fromArrayBuffer(that, value, encodingOrOffset, length)
+  if (value instanceof ArrayBuffer) {
+    return fromArrayBuffer(value, encodingOrOffset, length)
   }
 
   if (typeof value === 'string') {
-    return fromString(that, value, encodingOrOffset)
+    return fromString(value, encodingOrOffset)
   }
 
-  return fromObject(that, value)
+  return fromObject(value)
 }
 
 /**
@@ -16333,21 +16871,13 @@ function from (that, value, encodingOrOffset, length) {
  * Buffer.from(arrayBuffer[, byteOffset[, length]])
  **/
 Buffer.from = function (value, encodingOrOffset, length) {
-  return from(null, value, encodingOrOffset, length)
+  return from(value, encodingOrOffset, length)
 }
 
-if (Buffer.TYPED_ARRAY_SUPPORT) {
-  Buffer.prototype.__proto__ = Uint8Array.prototype
-  Buffer.__proto__ = Uint8Array
-  if (typeof Symbol !== 'undefined' && Symbol.species &&
-      Buffer[Symbol.species] === Buffer) {
-    // Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
-    Object.defineProperty(Buffer, Symbol.species, {
-      value: null,
-      configurable: true
-    })
-  }
-}
+// Note: Change prototype *after* Buffer.from is defined to workaround Chrome bug:
+// https://github.com/feross/buffer/pull/148
+Buffer.prototype.__proto__ = Uint8Array.prototype
+Buffer.__proto__ = Uint8Array
 
 function assertSize (size) {
   if (typeof size !== 'number') {
@@ -16357,20 +16887,20 @@ function assertSize (size) {
   }
 }
 
-function alloc (that, size, fill, encoding) {
+function alloc (size, fill, encoding) {
   assertSize(size)
   if (size <= 0) {
-    return createBuffer(that, size)
+    return createBuffer(size)
   }
   if (fill !== undefined) {
     // Only pay attention to encoding if it's a string. This
     // prevents accidentally sending in a number that would
     // be interpretted as a start offset.
     return typeof encoding === 'string'
-      ? createBuffer(that, size).fill(fill, encoding)
-      : createBuffer(that, size).fill(fill)
+      ? createBuffer(size).fill(fill, encoding)
+      : createBuffer(size).fill(fill)
   }
-  return createBuffer(that, size)
+  return createBuffer(size)
 }
 
 /**
@@ -16378,34 +16908,28 @@ function alloc (that, size, fill, encoding) {
  * alloc(size[, fill[, encoding]])
  **/
 Buffer.alloc = function (size, fill, encoding) {
-  return alloc(null, size, fill, encoding)
+  return alloc(size, fill, encoding)
 }
 
-function allocUnsafe (that, size) {
+function allocUnsafe (size) {
   assertSize(size)
-  that = createBuffer(that, size < 0 ? 0 : checked(size) | 0)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < size; ++i) {
-      that[i] = 0
-    }
-  }
-  return that
+  return createBuffer(size < 0 ? 0 : checked(size) | 0)
 }
 
 /**
  * Equivalent to Buffer(num), by default creates a non-zero-filled Buffer instance.
  * */
 Buffer.allocUnsafe = function (size) {
-  return allocUnsafe(null, size)
+  return allocUnsafe(size)
 }
 /**
  * Equivalent to SlowBuffer(num), by default creates a non-zero-filled Buffer instance.
  */
 Buffer.allocUnsafeSlow = function (size) {
-  return allocUnsafe(null, size)
+  return allocUnsafe(size)
 }
 
-function fromString (that, string, encoding) {
+function fromString (string, encoding) {
   if (typeof encoding !== 'string' || encoding === '') {
     encoding = 'utf8'
   }
@@ -16415,32 +16939,30 @@ function fromString (that, string, encoding) {
   }
 
   var length = byteLength(string, encoding) | 0
-  that = createBuffer(that, length)
+  var buf = createBuffer(length)
 
-  var actual = that.write(string, encoding)
+  var actual = buf.write(string, encoding)
 
   if (actual !== length) {
     // Writing a hex string, for example, that contains invalid characters will
     // cause everything after the first invalid character to be ignored. (e.g.
     // 'abxxcd' will be treated as 'ab')
-    that = that.slice(0, actual)
+    buf = buf.slice(0, actual)
   }
 
-  return that
+  return buf
 }
 
-function fromArrayLike (that, array) {
+function fromArrayLike (array) {
   var length = array.length < 0 ? 0 : checked(array.length) | 0
-  that = createBuffer(that, length)
+  var buf = createBuffer(length)
   for (var i = 0; i < length; i += 1) {
-    that[i] = array[i] & 255
+    buf[i] = array[i] & 255
   }
-  return that
+  return buf
 }
 
-function fromArrayBuffer (that, array, byteOffset, length) {
-  array.byteLength // this throws if `array` is not a valid ArrayBuffer
-
+function fromArrayBuffer (array, byteOffset, length) {
   if (byteOffset < 0 || array.byteLength < byteOffset) {
     throw new RangeError('\'offset\' is out of bounds')
   }
@@ -16449,49 +16971,43 @@ function fromArrayBuffer (that, array, byteOffset, length) {
     throw new RangeError('\'length\' is out of bounds')
   }
 
+  var buf
   if (byteOffset === undefined && length === undefined) {
-    array = new Uint8Array(array)
+    buf = new Uint8Array(array)
   } else if (length === undefined) {
-    array = new Uint8Array(array, byteOffset)
+    buf = new Uint8Array(array, byteOffset)
   } else {
-    array = new Uint8Array(array, byteOffset, length)
+    buf = new Uint8Array(array, byteOffset, length)
   }
 
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    // Return an augmented `Uint8Array` instance, for best performance
-    that = array
-    that.__proto__ = Buffer.prototype
-  } else {
-    // Fallback: Return an object instance of the Buffer class
-    that = fromArrayLike(that, array)
-  }
-  return that
+  // Return an augmented `Uint8Array` instance
+  buf.__proto__ = Buffer.prototype
+  return buf
 }
 
-function fromObject (that, obj) {
+function fromObject (obj) {
   if (Buffer.isBuffer(obj)) {
     var len = checked(obj.length) | 0
-    that = createBuffer(that, len)
+    var buf = createBuffer(len)
 
-    if (that.length === 0) {
-      return that
+    if (buf.length === 0) {
+      return buf
     }
 
-    obj.copy(that, 0, 0, len)
-    return that
+    obj.copy(buf, 0, 0, len)
+    return buf
   }
 
   if (obj) {
-    if ((typeof ArrayBuffer !== 'undefined' &&
-        obj.buffer instanceof ArrayBuffer) || 'length' in obj) {
+    if (ArrayBuffer.isView(obj) || 'length' in obj) {
       if (typeof obj.length !== 'number' || isnan(obj.length)) {
-        return createBuffer(that, 0)
+        return createBuffer(0)
       }
-      return fromArrayLike(that, obj)
+      return fromArrayLike(obj)
     }
 
-    if (obj.type === 'Buffer' && isArray(obj.data)) {
-      return fromArrayLike(that, obj.data)
+    if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
+      return fromArrayLike(obj.data)
     }
   }
 
@@ -16499,11 +17015,11 @@ function fromObject (that, obj) {
 }
 
 function checked (length) {
-  // Note: cannot use `length < kMaxLength()` here because that fails when
+  // Note: cannot use `length < K_MAX_LENGTH` here because that fails when
   // length is NaN (which is otherwise coerced to zero.)
-  if (length >= kMaxLength()) {
+  if (length >= K_MAX_LENGTH) {
     throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
-                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+                         'size: 0x' + K_MAX_LENGTH.toString(16) + ' bytes')
   }
   return length | 0
 }
@@ -16516,7 +17032,7 @@ function SlowBuffer (length) {
 }
 
 Buffer.isBuffer = function isBuffer (b) {
-  return !!(b != null && b._isBuffer)
+  return b != null && b._isBuffer === true
 }
 
 Buffer.compare = function compare (a, b) {
@@ -16562,7 +17078,7 @@ Buffer.isEncoding = function isEncoding (encoding) {
 }
 
 Buffer.concat = function concat (list, length) {
-  if (!isArray(list)) {
+  if (!Array.isArray(list)) {
     throw new TypeError('"list" argument must be an Array of Buffers')
   }
 
@@ -16595,8 +17111,7 @@ function byteLength (string, encoding) {
   if (Buffer.isBuffer(string)) {
     return string.length
   }
-  if (typeof ArrayBuffer !== 'undefined' && typeof ArrayBuffer.isView === 'function' &&
-      (ArrayBuffer.isView(string) || string instanceof ArrayBuffer)) {
+  if (ArrayBuffer.isView(string) || string instanceof ArrayBuffer) {
     return string.byteLength
   }
   if (typeof string !== 'string') {
@@ -16706,8 +17221,12 @@ function slowToString (encoding, start, end) {
   }
 }
 
-// The property is used by `Buffer.isBuffer` and `is-buffer` (in Safari 5-7) to detect
-// Buffer instances.
+// This property is used by `Buffer.isBuffer` (and the `is-buffer` npm package)
+// to detect a Buffer instance. It's not possible to use `instanceof Buffer`
+// reliably in a browserify context because there could be multiple different
+// copies of the 'buffer' package in use. This method works even for Buffer
+// instances that were created from another copy of the `buffer` package.
+// See: https://github.com/feross/buffer/issues/154
 Buffer.prototype._isBuffer = true
 
 function swap (b, n, m) {
@@ -16754,7 +17273,7 @@ Buffer.prototype.swap64 = function swap64 () {
 }
 
 Buffer.prototype.toString = function toString () {
-  var length = this.length | 0
+  var length = this.length
   if (length === 0) return ''
   if (arguments.length === 0) return utf8Slice(this, 0, length)
   return slowToString.apply(this, arguments)
@@ -16887,8 +17406,7 @@ function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
     return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
   } else if (typeof val === 'number') {
     val = val & 0xFF // Search for a byte value [0-255]
-    if (Buffer.TYPED_ARRAY_SUPPORT &&
-        typeof Uint8Array.prototype.indexOf === 'function') {
+    if (typeof Uint8Array.prototype.indexOf === 'function') {
       if (dir) {
         return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
       } else {
@@ -17029,15 +17547,14 @@ Buffer.prototype.write = function write (string, offset, length, encoding) {
     offset = 0
   // Buffer#write(string, offset[, length][, encoding])
   } else if (isFinite(offset)) {
-    offset = offset | 0
+    offset = offset >>> 0
     if (isFinite(length)) {
-      length = length | 0
+      length = length >>> 0
       if (encoding === undefined) encoding = 'utf8'
     } else {
       encoding = length
       length = undefined
     }
-  // legacy write(string, encoding, offset, length) - remove in v0.13
   } else {
     throw new Error(
       'Buffer.write(string, encoding, offset[, length]) is no longer supported'
@@ -17236,7 +17753,7 @@ function utf16leSlice (buf, start, end) {
   var bytes = buf.slice(start, end)
   var res = ''
   for (var i = 0; i < bytes.length; i += 2) {
-    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+    res += String.fromCharCode(bytes[i] + (bytes[i + 1] * 256))
   }
   return res
 }
@@ -17262,18 +17779,9 @@ Buffer.prototype.slice = function slice (start, end) {
 
   if (end < start) end = start
 
-  var newBuf
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    newBuf = this.subarray(start, end)
-    newBuf.__proto__ = Buffer.prototype
-  } else {
-    var sliceLen = end - start
-    newBuf = new Buffer(sliceLen, undefined)
-    for (var i = 0; i < sliceLen; ++i) {
-      newBuf[i] = this[i + start]
-    }
-  }
-
+  var newBuf = this.subarray(start, end)
+  // Return an augmented `Uint8Array` instance
+  newBuf.__proto__ = Buffer.prototype
   return newBuf
 }
 
@@ -17286,8 +17794,8 @@ function checkOffset (offset, ext, length) {
 }
 
 Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
-  offset = offset | 0
-  byteLength = byteLength | 0
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
   if (!noAssert) checkOffset(offset, byteLength, this.length)
 
   var val = this[offset]
@@ -17301,8 +17809,8 @@ Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert)
 }
 
 Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
-  offset = offset | 0
-  byteLength = byteLength | 0
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
   if (!noAssert) {
     checkOffset(offset, byteLength, this.length)
   }
@@ -17317,21 +17825,25 @@ Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert)
 }
 
 Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 1, this.length)
   return this[offset]
 }
 
 Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 2, this.length)
   return this[offset] | (this[offset + 1] << 8)
 }
 
 Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 2, this.length)
   return (this[offset] << 8) | this[offset + 1]
 }
 
 Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 4, this.length)
 
   return ((this[offset]) |
@@ -17341,6 +17853,7 @@ Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
 }
 
 Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 4, this.length)
 
   return (this[offset] * 0x1000000) +
@@ -17350,8 +17863,8 @@ Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
 }
 
 Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
-  offset = offset | 0
-  byteLength = byteLength | 0
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
   if (!noAssert) checkOffset(offset, byteLength, this.length)
 
   var val = this[offset]
@@ -17368,8 +17881,8 @@ Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
 }
 
 Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
-  offset = offset | 0
-  byteLength = byteLength | 0
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
   if (!noAssert) checkOffset(offset, byteLength, this.length)
 
   var i = byteLength
@@ -17386,24 +17899,28 @@ Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
 }
 
 Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 1, this.length)
   if (!(this[offset] & 0x80)) return (this[offset])
   return ((0xff - this[offset] + 1) * -1)
 }
 
 Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 2, this.length)
   var val = this[offset] | (this[offset + 1] << 8)
   return (val & 0x8000) ? val | 0xFFFF0000 : val
 }
 
 Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 2, this.length)
   var val = this[offset + 1] | (this[offset] << 8)
   return (val & 0x8000) ? val | 0xFFFF0000 : val
 }
 
 Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 4, this.length)
 
   return (this[offset]) |
@@ -17413,6 +17930,7 @@ Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
 }
 
 Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 4, this.length)
 
   return (this[offset] << 24) |
@@ -17422,21 +17940,25 @@ Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
 }
 
 Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 4, this.length)
   return ieee754.read(this, offset, true, 23, 4)
 }
 
 Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 4, this.length)
   return ieee754.read(this, offset, false, 23, 4)
 }
 
 Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 8, this.length)
   return ieee754.read(this, offset, true, 52, 8)
 }
 
 Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  offset = offset >>> 0
   if (!noAssert) checkOffset(offset, 8, this.length)
   return ieee754.read(this, offset, false, 52, 8)
 }
@@ -17449,8 +17971,8 @@ function checkInt (buf, value, offset, ext, max, min) {
 
 Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
   value = +value
-  offset = offset | 0
-  byteLength = byteLength | 0
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
   if (!noAssert) {
     var maxBytes = Math.pow(2, 8 * byteLength) - 1
     checkInt(this, value, offset, byteLength, maxBytes, 0)
@@ -17468,8 +17990,8 @@ Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, 
 
 Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
   value = +value
-  offset = offset | 0
-  byteLength = byteLength | 0
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
   if (!noAssert) {
     var maxBytes = Math.pow(2, 8 * byteLength) - 1
     checkInt(this, value, offset, byteLength, maxBytes, 0)
@@ -17487,89 +18009,57 @@ Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, 
 
 Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
   this[offset] = (value & 0xff)
   return offset + 1
 }
 
-function objectWriteUInt16 (buf, value, offset, littleEndian) {
-  if (value < 0) value = 0xffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; ++i) {
-    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
-      (littleEndian ? i : 1 - i) * 8
-  }
-}
-
 Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value & 0xff)
-    this[offset + 1] = (value >>> 8)
-  } else {
-    objectWriteUInt16(this, value, offset, true)
-  }
+  this[offset] = (value & 0xff)
+  this[offset + 1] = (value >>> 8)
   return offset + 2
 }
 
 Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 8)
-    this[offset + 1] = (value & 0xff)
-  } else {
-    objectWriteUInt16(this, value, offset, false)
-  }
+  this[offset] = (value >>> 8)
+  this[offset + 1] = (value & 0xff)
   return offset + 2
-}
-
-function objectWriteUInt32 (buf, value, offset, littleEndian) {
-  if (value < 0) value = 0xffffffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; ++i) {
-    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
-  }
 }
 
 Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset + 3] = (value >>> 24)
-    this[offset + 2] = (value >>> 16)
-    this[offset + 1] = (value >>> 8)
-    this[offset] = (value & 0xff)
-  } else {
-    objectWriteUInt32(this, value, offset, true)
-  }
+  this[offset + 3] = (value >>> 24)
+  this[offset + 2] = (value >>> 16)
+  this[offset + 1] = (value >>> 8)
+  this[offset] = (value & 0xff)
   return offset + 4
 }
 
 Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 24)
-    this[offset + 1] = (value >>> 16)
-    this[offset + 2] = (value >>> 8)
-    this[offset + 3] = (value & 0xff)
-  } else {
-    objectWriteUInt32(this, value, offset, false)
-  }
+  this[offset] = (value >>> 24)
+  this[offset + 1] = (value >>> 16)
+  this[offset + 2] = (value >>> 8)
+  this[offset + 3] = (value & 0xff)
   return offset + 4
 }
 
 Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) {
-    var limit = Math.pow(2, 8 * byteLength - 1)
+    var limit = Math.pow(2, (8 * byteLength) - 1)
 
     checkInt(this, value, offset, byteLength, limit - 1, -limit)
   }
@@ -17590,9 +18080,9 @@ Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, no
 
 Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) {
-    var limit = Math.pow(2, 8 * byteLength - 1)
+    var limit = Math.pow(2, (8 * byteLength) - 1)
 
     checkInt(this, value, offset, byteLength, limit - 1, -limit)
   }
@@ -17613,9 +18103,8 @@ Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, no
 
 Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
   if (value < 0) value = 0xff + value + 1
   this[offset] = (value & 0xff)
   return offset + 1
@@ -17623,58 +18112,42 @@ Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
 
 Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value & 0xff)
-    this[offset + 1] = (value >>> 8)
-  } else {
-    objectWriteUInt16(this, value, offset, true)
-  }
+  this[offset] = (value & 0xff)
+  this[offset + 1] = (value >>> 8)
   return offset + 2
 }
 
 Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 8)
-    this[offset + 1] = (value & 0xff)
-  } else {
-    objectWriteUInt16(this, value, offset, false)
-  }
+  this[offset] = (value >>> 8)
+  this[offset + 1] = (value & 0xff)
   return offset + 2
 }
 
 Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value & 0xff)
-    this[offset + 1] = (value >>> 8)
-    this[offset + 2] = (value >>> 16)
-    this[offset + 3] = (value >>> 24)
-  } else {
-    objectWriteUInt32(this, value, offset, true)
-  }
+  this[offset] = (value & 0xff)
+  this[offset + 1] = (value >>> 8)
+  this[offset + 2] = (value >>> 16)
+  this[offset + 3] = (value >>> 24)
   return offset + 4
 }
 
 Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
   value = +value
-  offset = offset | 0
+  offset = offset >>> 0
   if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
   if (value < 0) value = 0xffffffff + value + 1
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 24)
-    this[offset + 1] = (value >>> 16)
-    this[offset + 2] = (value >>> 8)
-    this[offset + 3] = (value & 0xff)
-  } else {
-    objectWriteUInt32(this, value, offset, false)
-  }
+  this[offset] = (value >>> 24)
+  this[offset + 1] = (value >>> 16)
+  this[offset + 2] = (value >>> 8)
+  this[offset + 3] = (value & 0xff)
   return offset + 4
 }
 
@@ -17684,6 +18157,8 @@ function checkIEEE754 (buf, value, offset, ext, max, min) {
 }
 
 function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  value = +value
+  offset = offset >>> 0
   if (!noAssert) {
     checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
   }
@@ -17700,6 +18175,8 @@ Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) 
 }
 
 function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  value = +value
+  offset = offset >>> 0
   if (!noAssert) {
     checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
   }
@@ -17748,7 +18225,7 @@ Buffer.prototype.copy = function copy (target, targetStart, start, end) {
     for (i = len - 1; i >= 0; --i) {
       target[i + targetStart] = this[i + start]
     }
-  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+  } else if (len < 1000) {
     // ascending copy from start
     for (i = 0; i < len; ++i) {
       target[i + targetStart] = this[i + start]
@@ -17817,7 +18294,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
   } else {
     var bytes = Buffer.isBuffer(val)
       ? val
-      : utf8ToBytes(new Buffer(val, encoding).toString())
+      : new Buffer(val, encoding)
     var len = bytes.length
     for (i = 0; i < end - start; ++i) {
       this[i + start] = bytes[i % len]
@@ -17830,7 +18307,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
 // HELPER FUNCTIONS
 // ================
 
-var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
+var INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g
 
 function base64clean (str) {
   // Node strips out invalid characters like \n and \t from the string, base64-js does not
@@ -17975,8 +18452,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":112,"ieee754":120,"isarray":123}],116:[function(require,module,exports){
+},{"base64-js":112,"ieee754":120}],116:[function(require,module,exports){
 arguments[4][17][0].apply(exports,arguments)
 },{"dup":17}],117:[function(require,module,exports){
 (function (Buffer){
