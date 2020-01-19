@@ -1,2 +1,4 @@
 node_modules
 downloads
+dist
+.DS_Store
