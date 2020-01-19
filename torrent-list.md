@@ -8,7 +8,7 @@
 * https://fastcast.nz/downloads/agitation-new-zealand-4k.mp4
 * https://fastcast.nz/downloads/cityscape-chicago-ii.mp4
 * https://fastcast.nz/downloads/cityscape-chicago.mp4
-* https://fastcast.nz/torrents/clockwork-4-nikkyyhd.mp4
+* https://fastcast.nz/downloads/clockwork-4-nikkyyhd.mp4
 * https://fastcast.nz/downloads/kimdotcom-good-life.mp4
 * https://fastcast.nz/downloads/kimdotcom-party-amplifier.mp4
 * https://fastcast.nz/downloads/sintel.mp4

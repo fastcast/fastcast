@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "test": "standard",
-    "build": "browserify client/stream.js -o js/bundle.js && browserify client/seed.js -o js/bundle-seed.js"
+    "build": "browserify client/stream-torrent.js -o js/bundle-stream.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,6 @@
   ],
   "author": {
     "name": "Jacob Fulton Buckle",
-    "email": "jacobafb@gmail.com",
     "url": "https://github.com/jakefb"
   },
   "license": "MIT",
@@ -28,20 +27,14 @@
   },
   "homepage": "http://fastcast.nz",
   "dependencies": {
-    "drag-drop": "^2.13.2",
-    "parse-torrent": "^5.8.3",
-    "pretty-bytes": "^4.0.2",
-    "simple-peer": "^8.1.1",
-    "stream-http": "^2.7.2",
-    "throttleit": "^1.0.0",
-    "typedarray-to-buffer": "^3.1.2",
-    "upload-element": "^1.0.1",
-    "webtorrent": "0.x"
+    "parse-torrent": "^7.0.1",
+    "pretty-bytes": "^5.3.0",
+    "simple-peer": "^9.6.2",
+    "stream-http": "^3.1.0",
+    "webtorrent": "^0.107.17"
   },
   "devDependencies": {
-    "bootlint": "^0.14.2",
-    "browserify": "^14.4.0",
-    "recess": "^1.1.9",
-    "standard": "^10.0.3"
+    "browserify": "^16.5.0",
+    "standard": "^14.3.1"
   }
 }
